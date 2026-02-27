@@ -46,7 +46,7 @@ html{font-size:16px}
 <!-- HEADER -->
 <header class="bg-white shadow-sm sticky top-0 z-30">
 <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-  <button onclick="goHome()" class="flex items-center gap-2.5"><div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white text-lg font-bold"></div><h1 class="text-lg font-extrabold hidden sm:block leading-tight" id="logoTxt"></h1></button>
+  <button onclick="goHome()" class="flex items-center gap-2.5"><div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white text-lg font-bold">📝</div><h1 class="text-lg font-extrabold hidden sm:block leading-tight" id="logoTxt"></h1></button>
   <div class="flex items-center gap-2.5">
     <button onclick="changeLang()" id="langBtn" class="px-3 py-1.5 text-sm font-bold border rounded-lg hover:bg-gray-50">EN</button>
     <button onclick="openLocMod()" id="locBtn" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 hidden">📍 <span id="locLbl"></span></button>
@@ -247,7 +247,7 @@ async function goHome(){
       <div class="hero-slide"><video src="https://cdn.pixabay.com/video/2019/07/26/25521-350560498_large.mp4" muted loop playsinline></video></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <div class="text-5xl mb-3">📦</div>
+        <div class="text-5xl mb-3">📝</div>
         <h2 class="text-3xl md:text-4xl font-extrabold mb-2 drop-shadow-lg">${L('siteName')}</h2>
         <p class="text-xl md:text-2xl font-bold mb-1 text-blue-200 drop-shadow">${L('heroTitle')}</p>
         <p class="text-base text-blue-100 mb-1">${govNm?L('in_')+govNm:L('inOman')}</p>
