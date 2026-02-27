@@ -1,531 +1,634 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>منصة استشارة</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>  المستودع الرقمي للفعاليات والاستشارات ( إستشارة )</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Tajawal','sans-serif']}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{fontFamily:{ar:['Tajawal','sans-serif'],en:['Inter','sans-serif']}}}}</script>
 <style>
-*{font-family:'Tajawal','Noto Kufi Arabic',sans-serif;box-sizing:border-box}
-.fade-in{animation:fadeIn .4s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.bounce-in{animation:bounceIn .6s ease}
-@keyframes bounceIn{0%{transform:scale(0)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
-.skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+*{box-sizing:border-box;margin:0;padding:0}
+[dir="rtl"] *{font-family:'Tajawal','Noto Kufi Arabic',sans-serif}
+[dir="ltr"] *{font-family:'Inter',sans-serif}
+html{font-size:16px}
+.fade{animation:fadeIn .35s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.bounce-in{animation:bi .5s ease}@keyframes bi{0%{transform:scale(0)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+.cat-card{transition:all .3s}
+.cat-card:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(0,0,0,.12)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+/* Hero Slider */
+.hero-slider{position:relative;height:420px;overflow:hidden}
+@media(max-width:768px){.hero-slider{height:320px}}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1s ease;z-index:1}
+.hero-slide.active{opacity:1;z-index:2}
+.hero-slide img,.hero-slide video{width:100%;height:100%;object-fit:cover}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3) 0%,rgba(0,0,0,.55) 100%);z-index:3}
+.hero-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:4;color:#fff;text-align:center;padding:1rem}
+.hero-dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:8px}
+.hero-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.4);cursor:pointer;transition:all .3s}
+.hero-dot.active{background:#fff;transform:scale(1.3)}
+.hero-arrows{position:absolute;top:50%;z-index:5;transform:translateY(-50%);display:flex;justify-content:space-between;width:100%;padding:0 12px;pointer-events:none}
+.hero-arrow{width:40px;height:40px;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:all .3s;border:1px solid rgba(255,255,255,.3)}
+.hero-arrow:hover{background:rgba(255,255,255,.4)}
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
+<!-- LOCATION MODAL -->
+<div id="locMod" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+<div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+  <div class="bg-gradient-to-br from-blue-600 to-indigo-800 p-6 text-center text-white"><div class="text-4xl mb-2">📍</div><h2 class="text-lg font-bold" id="locTitle"></h2></div>
+  <div class="p-5"><select id="govSel" onchange="updateWilSel()" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:outline-none mb-3"></select>
+  <div class="hidden mb-3"><select id="wilSel" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:outline-none"></select></div>
+  <div class="flex gap-2"><button onclick="setLoc()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-700" id="locOk"></button><button onclick="skipLoc()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-sm hover:bg-gray-200" id="locSkip"></button></div></div>
+</div></div>
+
 <!-- HEADER -->
 <header class="bg-white shadow-sm sticky top-0 z-30">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-    <button onclick="goHome()" class="flex items-center gap-2"><svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><h1 class="text-xl font-bold text-gray-900">منصة التعليم</h1></button>
-    <div class="flex items-center gap-3">
-      <nav class="hidden md:flex items-center gap-5 ml-4">
-        <button onclick="goHome()" class="text-sm text-gray-700 hover:text-blue-600 font-semibold">الرئيسية</button>
-        <button onclick="showMyBookings()" class="text-sm text-gray-700 hover:text-blue-600 font-semibold hidden" id="navMyBook">حجوزاتي</button>
-        <button onclick="showTeacherDash()" class="text-sm text-gray-700 hover:text-blue-600 font-semibold hidden" id="navTeacher">لوحة المعلم</button>
-        <button onclick="showAdmin()" class="text-sm text-gray-700 hover:text-blue-600 font-semibold hidden" id="navAdmin">لوحة التحكم</button>
-      </nav>
-      <div id="guestBtns" class="flex gap-2">
-        <button onclick="openAuth()" class="px-3 py-1.5 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50">🔑 دخول</button>
-        <button onclick="openAuth('register')" class="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">➕ حساب جديد</button>
-      </div>
-      <div id="userBtn" class="relative hidden">
-        <button onclick="toggleDrop()" class="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
-          <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold" id="avatarInit">أ</div>
-          <span class="font-semibold text-sm hidden sm:inline" id="headerName"></span>
-          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div id="userDrop" class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-xl border w-56 z-50 hidden">
-          <div class="p-3 border-b bg-gray-50"><div class="font-semibold text-sm" id="dropName"></div><div class="text-xs text-gray-500" id="dropEmail"></div><span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold" id="dropRole"></span></div>
-          <button onclick="showAdmin()" class="w-full px-4 py-2.5 text-right text-sm text-gray-700 hover:bg-gray-50 hidden" id="dropAdmin">⚙️ لوحة التحكم</button>
-          <button onclick="showTeacherDash()" class="w-full px-4 py-2.5 text-right text-sm text-gray-700 hover:bg-gray-50 hidden" id="dropTeacher">📊 لوحة المعلم</button>
-          <button onclick="showMyBookings()" class="w-full px-4 py-2.5 text-right text-sm text-gray-700 hover:bg-gray-50" id="dropMyBook">📋 حجوزاتي</button>
-          <div class="border-t"><button onclick="logout()" class="w-full px-4 py-2.5 text-right text-sm text-red-600 hover:bg-red-50">🚪 تسجيل الخروج</button></div>
-        </div>
+<div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+  <button onclick="goHome()" class="flex items-center gap-2.5"><div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white text-lg font-bold">📦</div><h1 class="text-lg font-extrabold hidden sm:block leading-tight" id="logoTxt"></h1></button>
+  <div class="flex items-center gap-2.5">
+    <button onclick="changeLang()" id="langBtn" class="px-3 py-1.5 text-sm font-bold border rounded-lg hover:bg-gray-50">EN</button>
+    <button onclick="openLocMod()" id="locBtn" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 hidden">📍 <span id="locLbl"></span></button>
+    <nav class="hidden md:flex items-center gap-4 ml-3">
+      <button onclick="goHome()" class="text-sm font-semibold text-gray-700 hover:text-blue-600" id="navHome"></button>
+      <button onclick="showMyBook()" class="text-sm font-semibold text-gray-700 hover:text-blue-600 hidden" id="navMy"></button>
+      <button onclick="showTeacherDash()" class="text-sm font-semibold text-gray-700 hover:text-blue-600 hidden" id="navTeach"></button>
+      <button onclick="showAdmin()" class="text-sm font-semibold text-gray-700 hover:text-blue-600 hidden" id="navAdm"></button>
+    </nav>
+    <div id="gBtns" class="flex gap-2"><button onclick="openAuth()" class="px-3 py-2 text-sm font-semibold text-gray-700 border rounded-lg hover:bg-gray-50" id="btnLogin"></button><button onclick="openAuth('reg')" class="px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700" id="btnReg"></button></div>
+    <div id="uBtn" class="relative hidden">
+      <button onclick="$('uDrop').classList.toggle('hidden')" class="flex items-center gap-2 px-2.5 py-2 rounded-lg border hover:bg-gray-50"><div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold" id="avI">أ</div><span class="font-semibold text-sm hidden sm:inline" id="hNm"></span><svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg></button>
+      <div id="uDrop" class="absolute left-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border w-56 z-50 hidden">
+        <div class="p-3 border-b bg-gray-50"><div class="font-semibold text-sm" id="dNm"></div><div class="text-xs text-gray-500" id="dEm"></div><span id="dRl" class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold"></span></div>
+        <button onclick="showAdmin()" class="w-full px-4 py-2.5 text-right text-sm hover:bg-gray-50 hidden" id="dAdm"></button>
+        <button onclick="showTeacherDash()" class="w-full px-4 py-2.5 text-right text-sm hover:bg-gray-50 hidden" id="dTeach"></button>
+        <button onclick="showMyBook()" class="w-full px-4 py-2.5 text-right text-sm hover:bg-gray-50" id="dMy"></button>
+        <div class="border-t"><button onclick="logout()" class="w-full px-4 py-2.5 text-right text-sm text-red-600 hover:bg-red-50" id="dOut"></button></div>
       </div>
     </div>
   </div>
-</header>
+</div></header>
 <main id="app"><div class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div></main>
 
 <!-- AUTH MODAL -->
-<div id="authModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="if(event.target===this)closeAuth()">
-  <div class="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
-    <div class="flex items-center justify-between p-4 border-b"><h2 class="text-lg font-bold" id="authTitle">تسجيل الدخول</h2><button onclick="closeAuth()" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200">✕</button></div>
-    <div class="flex border-b">
-      <button onclick="switchAuth('login')" class="flex-1 py-2.5 font-semibold text-sm border-b-2 border-blue-600 text-blue-600" id="tabLogin">تسجيل الدخول</button>
-      <button onclick="switchAuth('register')" class="flex-1 py-2.5 font-semibold text-sm border-b-2 border-transparent text-gray-400" id="tabReg">إنشاء حساب</button>
-    </div>
-    <div class="p-4" id="authBody"></div>
+<div id="authMod" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="if(event.target===this)closeAuth()">
+<div class="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+  <div class="flex items-center justify-between p-4 border-b"><h2 class="text-lg font-bold" id="authT"></h2><button onclick="closeAuth()" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200">✕</button></div>
+  <div class="flex border-b"><button onclick="swAuth('login')" class="flex-1 py-2 font-semibold text-sm border-b-2" id="tL"></button><button onclick="swAuth('reg')" class="flex-1 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-400" id="tR"></button></div>
+  <div class="p-4" id="authB"></div>
+</div></div>
+
+<!-- DEV MODAL -->
+<div id="devMod" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+<div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+  <div class="text-4xl mb-3">👨‍💻</div><h3 class="text-lg font-bold mb-1" id="devTitle"></h3><p class="text-sm text-gray-500 mb-4" id="devSub"></p>
+  <div class="space-y-2 text-sm">
+    <a href="https://twitter.com/iksalalawi" target="_blank" class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg hover:bg-blue-50 justify-center">🐦 @iksalalawi</a>
+    <a href="https://instagram.com/iks.alalawi" target="_blank" class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg hover:bg-pink-50 justify-center">📸 @iks.alalawi</a>
+    <a href="https://www.linkedin.com/in/ibrahim-k-alalawi" target="_blank" class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg hover:bg-blue-50 justify-center">💼 LinkedIn</a>
+    <a href="https://github.com/alalawi1980" target="_blank" class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 justify-center">🐙 GitHub</a>
+    <a href="https://youtube.com/@ibrahimalalawi4515" target="_blank" class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg hover:bg-red-50 justify-center">▶️ YouTube</a>
   </div>
-</div>
+  <button onclick="$('devMod').classList.add('hidden')" class="mt-4 w-full py-2 bg-gray-100 rounded-lg text-sm font-semibold hover:bg-gray-200" id="devClose"></button>
+</div></div>
 
 <!-- TOAST -->
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-2xl z-50 opacity-0 translate-y-4 pointer-events-none transition-all duration-300"></div>
-
 <script>
-// ==================== SUPABASE CONFIG ====================
-const SUPA_URL='https://awpuxmuvujgmsweiqgxt.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3cHV4bXV2dWpnbXN3ZWlxZ3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTUyMzUsImV4cCI6MjA4NzQzMTIzNX0.GvqbFi-TqkrrmRrqnZCbBR3UsLRF5UrXyQESMZ0TTlk';
-const H={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
-const AD=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const AM=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
-let curUser=null,selTutor=null,curBooking=null,bookStep=1,selDate=null,selTime='',selSubj='';
+// ===== CONFIG =====
+const SU='https://awpuxmuvujgmsweiqgxt.supabase.co',SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3cHV4bXV2dWpnbXN3ZWlxZ3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTUyMzUsImV4cCI6MjA4NzQzMTIzNX0.GvqbFi-TqkrrmRrqnZCbBR3UsLRF5UrXyQESMZ0TTlk';
+const SH={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=representation'};
+const DN=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const MN=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+let curUser=null,selT=null,curBook=null,bkStep=1,bkDate=null,bkTime='',bkSubj='';
+let lang='ar',govs=[],wils=[],cats=[],allT=[],selGov=0,selWil=0,selCat=0;
 const $=id=>document.getElementById(id);
 
-// ==================== SUPABASE API ====================
-async function supa(table,method='GET',body=null,query=''){
-  const opts={method,headers:{...H}};
-  if(body)opts.body=JSON.stringify(body);
-  try{
-    const r=await fetch(`${SUPA_URL}/rest/v1/${table}${query}`,opts);
-    if(!r.ok){const e=await r.text();console.error('Supa error:',e);return null;}
-    const txt=await r.text();return txt?JSON.parse(txt):[];
-  }catch(e){console.error('Network:',e);return null;}
-}
-async function supaGet(table,q=''){return supa(table,'GET',null,q);}
-async function supaPost(table,body){return supa(table,'POST',body);}
-async function supaPatch(table,body,q){return supa(table,'PATCH',body,q);}
-async function supaDel(table,q){return supa(table,'DELETE',null,q);}
+// ===== SUPABASE =====
+async function api(t,m='GET',b=null,q=''){try{const o={method:m,headers:{...SH}};if(b)o.body=JSON.stringify(b);const r=await fetch(`${SU}/rest/v1/${t}${q}`,o);if(!r.ok)return null;const x=await r.text();return x?JSON.parse(x):[];}catch(e){console.error(e);return null;}}
+const GET=(t,q='')=>api(t,'GET',null,q),POST=(t,b)=>api(t,'POST',b),PATCH=(t,b,q)=>api(t,'PATCH',b,q),DEL=(t,q)=>api(t,'DELETE',null,q);
 
-// ==================== UTILS ====================
-function toast(m){const t=$('toast');t.textContent=m;t.className='fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-2xl z-50 opacity-100 translate-y-0 transition-all duration-300';setTimeout(()=>{t.className='fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-2xl z-50 opacity-0 translate-y-4 pointer-events-none transition-all duration-300';},3000);}
-function stars(n){return Array.from({length:5}).map((_,i)=>`<svg class="w-4 h-4 inline ${i<n?'text-yellow-500 fill-yellow-500':'text-gray-300'}" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('');}
-function toggleDrop(){$('userDrop').classList.toggle('hidden');}
-document.addEventListener('click',e=>{if(!e.target.closest('#userBtn'))$('userDrop')?.classList.add('hidden');});
+// ===== i18n =====
+const T={
+  siteName:['المستودع الرقمي للفعاليات والأنشطة','Digital Activities & Events Hub'],
+  home:['الرئيسية','Home'],myBook:['حجوزاتي','My Bookings'],provPanel:['لوحة المعلم','Teacher Panel'],adminPanel:['لوحة التحكم','Admin Panel'],
+  login:['🔑 دخول','🔑 Login'],register:['➕ حساب جديد','➕ Register'],loginTitle:['تسجيل الدخول','Login'],regTitle:['إنشاء حساب','Register'],
+  email:['البريد الإلكتروني','Email'],password:['كلمة المرور','Password'],name:['الاسم الكامل','Full Name'],phone:['الهاتف','Phone'],
+  confirmPw:['تأكيد كلمة المرور','Confirm Password'],enterCreds:['أدخل البيانات','Enter credentials'],invalidCreds:['بيانات غير صحيحة','Invalid credentials'],
+  fillFields:['أكمل الحقول','Fill all fields'],pwShort:['كلمة المرور قصيرة','Password too short'],pwMismatch:['كلمتا المرور مختلفتين','Passwords don\'t match'],
+  emailExists:['البريد مسجل','Email exists'],error:['خطأ','Error'],welcome:['مرحباً ','Welcome '],loggedOut:['تم الخروج','Logged out'],
+  locQ:['هل ترغب في عرض الأنشطة المتوفرة في منطقتك؟','Show activities available in your area?'],
+  showAct:['عرض الأنشطة','Show Activities'],showAll:['عرض الكل','Show All'],allGov:['جميع المحافظات','All Governorates'],allWil:['جميع الولايات','All Wilayats'],all:['الكل','All'],
+  heroTitle:['اكتشف أفضل الفعاليات والأنشطة','Discover Best Events & Activities'],heroSub:['تعليم · رياضة · فنون · مغامرات · تطوير ذات · ملاعب','Education · Sports · Arts · Adventures · Development · Venues'],
+  search:['ابحث عن نشاط أو معلم...','Search activities or teachers...'],results:['النتائج','Results'],activity:['نشاط','activities'],
+  price:['السعر','Price'],omr:['ر.ع','OMR'],view:['عرض','View'],online:['أونلاين','Online'],inPerson:['حضوري','In-Person'],
+  allPrices:['كل الأسعار','All Prices'],under10:['أقل من 10','Under 10'],over20:['أكثر من 20','Over 20'],allAges:['كل الأعمار','All Ages'],
+  kids:['أطفال 4-12','Kids 4-12'],youth:['شباب 12+','Youth 12+'],adults:['بالغين 18+','Adults 18+'],
+  back:['العودة','Back'],available:['متاح','Available'],years:['سنوات','years'],about:['نبذة','About'],category:['التصنيف','Category'],
+  services:['الخدمات','Services'],schedule:['المواعيد','Schedule'],reviews:['التقييمات','Reviews'],contact:['تواصل','Contact'],
+  bookNow:['احجز الآن','Book Now'],freeCancel:['إلغاء مجاني حتى 24 ساعة','Free cancellation up to 24h'],loginFirst:['سجّل دخولك أولاً','Login first'],
+  chooseDate:['اختر الموعد','Choose Date & Time'],time:['الوقت','Time'],next:['التالي','Next'],prev:['السابق','Back'],
+  chooseSvc:['اختر الخدمة','Choose Service'],yourInfo:['بياناتك','Your Info'],service:['الخدمة','Service'],date:['التاريخ','Date'],
+  total:['المجموع','Total'],confirm:['تأكيد الحجز','Confirm Booking'],completeInfo:['أكمل البيانات','Complete info'],
+  confirmed:['تم الحجز بنجاح!','Booking Confirmed!'],bookNum:['رقم الحجز','Booking #'],print:['طباعة','Print'],
+  noBook:['لا توجد حجوزات','No bookings'],active:['مؤكد','Active'],cancelled:['ملغي','Cancelled'],completed:['مكتمل','Completed'],pending:['معلّق','Pending'],
+  admin:['مدير','Admin'],teacher:['معلم','Teacher'],user:['مستخدم','User'],
+  users:['مستخدمون','Users'],teachers:['معلمون','Teachers'],bookings:['حجوزات','Bookings'],revenue:['إيرادات','Revenue'],
+  changeRole:['تغيير الدور','Change Role'],delete:['حذف','Delete'],cancel:['إلغاء','Cancel'],
+  addTeacher:['إضافة معلم جديد','Add New Teacher'],create:['إنشاء','Create'],enable:['تفعيل','Enable'],disable:['تعطيل','Disable'],
+  myProfile:['ملفي الشخصي','My Profile'],manageSchedule:['إدارة المواعيد','Manage Schedule'],myBookings:['حجوزاتي','My Bookings'],myReviews:['تقييماتي','My Reviews'],
+  imgUrl:['رابط الصورة','Image URL'],spec:['التخصص','Specialization'],bio:['نبذة عني','Bio'],priceH:['سعر الساعة','Hourly Rate'],
+  exp:['سنوات الخبرة','Experience (years)'],langs:['اللغات (فاصلة)','Languages (comma)'],subjects:['الخدمات/المواد (فاصلة)','Services (comma)'],
+  save:['💾 حفظ','💾 Save'],saved:['✅ تم الحفظ','✅ Saved'],slotsHint:['أدخل الأوقات مفصولة بفاصلة','Enter times separated by comma'],
+  noResults:['لا توجد نتائج','No results found'],connErr:['خطأ في الاتصال بقاعدة البيانات','Database connection error'],
+  devTitle:['تواصل مع المطور','Contact Developer'],devSub:['إبراهيم العلوي - مختص تقنية المعلومات والذكاء الاصطناعي','Ibrahim Al Alawi - IT & AI Specialist'],
+  close:['إغلاق','Close'],devBtn:['👨‍💻 تواصل مع المطور','👨‍💻 Contact Developer'],
+  allRights:['جميع الحقوق محفوظة','All rights reserved'],inOman:['في عُمان','in Oman'],in_:['في ','in '],
+  logout:['🚪 خروج','🚪 Logout'],noData:['لم يتم العثور على بيانات','No data found'],totalBook:['إجمالي الحجوزات','Total Bookings'],
+  activeBook:['حجوزات نشطة','Active Bookings'],rating:['التقييم','Rating'],earnings:['إيرادات','Earnings'],
+  welcProv:['لوحة تحكم المعلم','Teacher Dashboard'],noReview:['لا توجد تقييمات','No reviews'],
+  confirmDel:['حذف هذا العنصر؟','Delete this item?'],roleChanged:['تم تغيير الدور','Role changed'],deleted:['تم الحذف','Deleted'],
+  bookCancelled:['تم إلغاء الحجز','Booking cancelled'],schedSaved:['تم حفظ المواعيد','Schedule saved'],
+};
+function L(k){return T[k]?T[k][lang==='ar'?0:1]:(typeof k==='string'?k:k);}
+
+function applyLang(){
+  $('langBtn').textContent=lang==='ar'?'EN':'عربي';
+  document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.documentElement.lang=lang;
+  $('logoTxt').textContent=L('siteName');$('navHome').textContent=L('home');$('navMy').textContent=L('myBook');
+  $('navTeach').textContent=L('provPanel');$('navAdm').textContent=L('adminPanel');
+  $('btnLogin').textContent=L('login');$('btnReg').textContent=L('register');
+  $('dAdm').textContent='⚙️ '+L('adminPanel');$('dTeach').textContent='📊 '+L('provPanel');$('dMy').textContent='📋 '+L('myBook');$('dOut').textContent=L('logout');
+  $('locTitle').textContent=L('locQ');$('locOk').textContent=L('showAct');$('locSkip').textContent=L('showAll');
+  $('devTitle').textContent=L('devTitle');$('devSub').textContent=L('devSub');$('devClose').textContent=L('close');
+}
+function changeLang(){lang=lang==='ar'?'en':'ar';applyLang();goHome();}
+
+// ===== UTILS =====
+function toast(m){const t=$('toast');t.textContent=m;t.classList.remove('opacity-0','translate-y-4','pointer-events-none');t.classList.add('opacity-100','translate-y-0');setTimeout(()=>{t.classList.add('opacity-0','translate-y-4','pointer-events-none');t.classList.remove('opacity-100','translate-y-0');},3000);}
+function stars(n){return Array.from({length:5}).map((_,i)=>`<svg class="w-3.5 h-3.5 inline ${i<n?'text-yellow-500 fill-yellow-500':'text-gray-300'}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('');}
+document.addEventListener('click',e=>{if(!e.target.closest('#uBtn'))$('uDrop')?.classList.add('hidden');});
+function gn(g){return g?(lang==='ar'?g.name_ar:g.name_en):'';}
+function cn(c){return c?(lang==='ar'?c.name_ar:c.name_en):'';}
+function pn(p){return lang==='ar'?p.name_ar:(p.name_en||p.name_ar);}
+function ps(p){return lang==='ar'?(p.specialization_ar||''):(p.specialization_en||p.specialization_ar||'');}
+function pb(p){return lang==='ar'?(p.bio_ar||''):(p.bio_en||p.bio_ar||'');}
 
 function updateUI(){
   if(curUser){
-    $('guestBtns').classList.add('hidden');$('userBtn').classList.remove('hidden');
-    $('avatarInit').textContent=curUser.name[0];$('headerName').textContent=curUser.name.split(' ')[0];
-    $('dropName').textContent=curUser.name;$('dropEmail').textContent=curUser.email;
-    const r=$('dropRole');r.textContent=curUser.role==='admin'?'مدير':curUser.role==='teacher'?'معلم':'مستخدم';
-    r.className=`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold ${curUser.role==='admin'?'bg-red-50 text-red-600':curUser.role==='teacher'?'bg-green-50 text-green-600':'bg-blue-50 text-blue-600'}`;
-    $('navAdmin').classList.toggle('hidden',curUser.role!=='admin');$('dropAdmin').classList.toggle('hidden',curUser.role!=='admin');
-    $('navTeacher').classList.toggle('hidden',curUser.role!=='teacher');$('dropTeacher').classList.toggle('hidden',curUser.role!=='teacher');
-    $('navMyBook').classList.remove('hidden');$('dropMyBook').classList.remove('hidden');
-  }else{
-    $('guestBtns').classList.remove('hidden');$('userBtn').classList.add('hidden');
-    $('navAdmin').classList.add('hidden');$('navTeacher').classList.add('hidden');$('navMyBook').classList.add('hidden');
-  }
+    $('gBtns').classList.add('hidden');$('uBtn').classList.remove('hidden');
+    $('avI').textContent=curUser.name[0];$('hNm').textContent=curUser.name.split(' ')[0];
+    $('dNm').textContent=curUser.name;$('dEm').textContent=curUser.email;
+    const rl=curUser.role;$('dRl').textContent=rl==='admin'?L('admin'):rl==='teacher'?L('teacher'):L('user');
+    $('dRl').className=`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold ${rl==='admin'?'bg-red-50 text-red-600':rl==='teacher'?'bg-green-50 text-green-600':'bg-blue-50 text-blue-600'}`;
+    $('navAdm').classList.toggle('hidden',rl!=='admin');$('dAdm').classList.toggle('hidden',rl!=='admin');
+    $('navTeach').classList.toggle('hidden',rl!=='teacher');$('dTeach').classList.toggle('hidden',rl!=='teacher');
+    $('navMy').classList.remove('hidden');
+  }else{$('gBtns').classList.remove('hidden');$('uBtn').classList.add('hidden');['navAdm','navProv','navMy'].forEach(x=>$(x).classList.add('hidden'));}
 }
 
-// ==================== AUTH ====================
-function openAuth(t='login'){$('authModal').classList.remove('hidden');switchAuth(t);}
-function closeAuth(){$('authModal').classList.add('hidden');}
-function switchAuth(t){
-  $('tabLogin').className=`flex-1 py-2.5 font-semibold text-sm border-b-2 ${t==='login'?'border-blue-600 text-blue-600':'border-transparent text-gray-400'}`;
-  $('tabReg').className=`flex-1 py-2.5 font-semibold text-sm border-b-2 ${t==='register'?'border-blue-600 text-blue-600':'border-transparent text-gray-400'}`;
-  $('authTitle').textContent=t==='login'?'تسجيل الدخول':'إنشاء حساب';
-  if(t==='login'){
-    $('authBody').innerHTML=`<div class="space-y-3">
-      <div class="bg-blue-50 p-2.5 rounded-lg text-center text-xs border border-blue-100">🔑 أدمن: <b class="text-blue-600">admin@admin.com</b> / <b class="text-blue-600">admin123</b><br>👨‍🏫 معلم: <b class="text-blue-600">ahmad.teacher@test.com</b> / <b class="text-blue-600">123456</b></div>
-      <div><label class="block text-sm font-semibold mb-1">البريد الإلكتروني</label><input id="lEmail" type="email" dir="ltr" placeholder="email@example.com" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">كلمة المرور</label><input id="lPw" type="password" dir="ltr" placeholder="كلمة المرور" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div id="authErr" class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg hidden"></div>
-      <button onclick="doLogin()" class="w-full py-2.5 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 text-sm">تسجيل الدخول</button></div>`;
+// ===== LOCATION =====
+async function loadGovs(){govs=await GET('governorates','?order=id')||[];wils=await GET('wilayats','?order=governorate_id,id')||[];}
+function openLocMod(){
+  $('govSel').innerHTML=`<option value="0">${L('allGov')}</option>`+govs.map(g=>`<option value="${g.id}" ${selGov===g.id?'selected':''}>${gn(g)}</option>`).join('');
+  updateWilSel();
+  $('locMod').classList.remove('hidden');
+}
+function setLoc(){selGov=+$('govSel').value;selWil=+($('wilSel')?.value||0);$('locMod').classList.add('hidden');const g=govs.find(x=>x.id===selGov);const w=wils.find(x=>x.id===selWil);$('locLbl').textContent=w?wn(w):g?gn(g):L('all');$('locBtn').classList.remove('hidden');localStorage.setItem('gov',selGov);localStorage.setItem('wil',selWil);goHome();}
+function skipLoc(){selGov=0;selWil=0;$('locMod').classList.add('hidden');$('locLbl').textContent=L('all');$('locBtn').classList.remove('hidden');localStorage.setItem('gov','0');localStorage.setItem('wil','0');goHome();}
+function wn(w){return w?(lang==='ar'?w.name_ar:w.name_en):'';}
+function updateWilSel(){const ws=$('wilSel');if(!ws)return;const gid=+($('govSel')?.value||0);const fw=gid?wils.filter(w=>w.governorate_id===gid):[];ws.innerHTML=`<option value="0">${L('allWil')}</option>`+fw.map(w=>`<option value="${w.id}" ${selWil===w.id?'selected':''}>${wn(w)}</option>`).join('');ws.closest('div').classList.toggle('hidden',!gid);}
+
+// ===== AUTH =====
+function openAuth(t='login'){$('authMod').classList.remove('hidden');swAuth(t);}
+function closeAuth(){$('authMod').classList.add('hidden');}
+function swAuth(t){
+  const isL=t==='login';
+  $('tL').className=`flex-1 py-2 font-semibold text-sm border-b-2 ${isL?'border-blue-600 text-blue-600':'border-transparent text-gray-400'}`;$('tL').textContent=L('loginTitle');
+  $('tR').className=`flex-1 py-2 font-semibold text-sm border-b-2 ${!isL?'border-blue-600 text-blue-600':'border-transparent text-gray-400'}`;$('tR').textContent=L('regTitle');
+  $('authT').textContent=isL?L('loginTitle'):L('regTitle');
+  if(isL){
+    $('authB').innerHTML=`<div class="space-y-3">
+      <div class="bg-blue-50 p-2 rounded-lg text-center text-xs border border-blue-100">🔑 Admin: <b>admin@admin.com</b> / <b>admin123</b><br>👨‍🏫 معلم: <b>ahmad.t@test.com</b> / <b>123456</b></div>
+      <div><label class="block text-sm font-semibold mb-1">${L('email')}</label><input id="lE" type="email" dir="ltr" placeholder="email@example.com" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none"></div>
+      <div><label class="block text-sm font-semibold mb-1">${L('password')}</label><input id="lP" type="password" dir="ltr" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div id="aErr" class="text-xs text-red-600 bg-red-50 p-2 rounded-lg hidden"></div>
+      <button onclick="doLogin()" class="w-full py-2.5 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 text-sm">${L('loginTitle')}</button></div>`;
   }else{
-    $('authBody').innerHTML=`<div class="space-y-3">
-      <div><label class="block text-sm font-semibold mb-1">الاسم الكامل</label><input id="rName" placeholder="أدخل اسمك" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">البريد الإلكتروني</label><input id="rEmail" type="email" dir="ltr" placeholder="email@example.com" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">رقم الهاتف</label><input id="rPhone" type="tel" dir="ltr" placeholder="+968 XXXX XXXX" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">كلمة المرور</label><input id="rPw" type="password" dir="ltr" placeholder="6 أحرف على الأقل" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">تأكيد كلمة المرور</label><input id="rPw2" type="password" dir="ltr" placeholder="أعد إدخال كلمة المرور" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <div id="authErr" class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg hidden"></div>
-      <button onclick="doRegister()" class="w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 text-sm">إنشاء الحساب</button></div>`;
+    $('authB').innerHTML=`<div class="space-y-3">
+      <input id="rN" placeholder="${L('name')}" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <input id="rE" type="email" dir="ltr" placeholder="${L('email')}" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <input id="rPh" type="tel" dir="ltr" placeholder="${L('phone')}" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <input id="rP" type="password" dir="ltr" placeholder="${L('password')}" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <input id="rP2" type="password" dir="ltr" placeholder="${L('confirmPw')}" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none" onkeydown="if(event.key==='Enter')doReg()">
+      <div id="aErr" class="text-xs text-red-600 bg-red-50 p-2 rounded-lg hidden"></div>
+      <button onclick="doReg()" class="w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 text-sm">${L('regTitle')}</button></div>`;
   }
 }
-function showErr(m){const e=$('authErr');if(e){e.textContent=m;e.classList.remove('hidden');}}
-async function doLogin(){
-  const email=$('lEmail')?.value.trim(),pw=$('lPw')?.value;
-  if(!email||!pw)return showErr('⚠️ أدخل البريد وكلمة المرور');
-  const users=await supaGet('users',`?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pw)}`);
-  if(!users||!users.length)return showErr('❌ بيانات غير صحيحة');
-  curUser=users[0];closeAuth();updateUI();toast('مرحباً '+curUser.name+' 👋');
-}
-async function doRegister(){
-  const name=$('rName')?.value.trim(),email=$('rEmail')?.value.trim(),phone=$('rPhone')?.value.trim(),pw=$('rPw')?.value,pw2=$('rPw2')?.value;
-  if(!name||!email||!pw)return showErr('⚠️ أكمل جميع الحقول');
-  if(pw.length<6)return showErr('⚠️ كلمة المرور 6 أحرف على الأقل');
-  if(pw!==pw2)return showErr('⚠️ كلمتا المرور غير متطابقتين');
-  const exist=await supaGet('users',`?email=eq.${encodeURIComponent(email)}`);
-  if(exist&&exist.length)return showErr('❌ البريد مسجل مسبقاً');
-  const res=await supaPost('users',[{name,email,phone,password:pw,role:'user'}]);
-  if(!res||!res.length)return showErr('❌ خطأ في التسجيل');
-  curUser=res[0];closeAuth();updateUI();toast('مرحباً '+name+' 🎉');
-}
-function logout(){curUser=null;$('userDrop').classList.add('hidden');updateUI();goHome();toast('تم تسجيل الخروج');}
+function showErr(m){const e=$('aErr');if(e){e.textContent=m;e.classList.remove('hidden');}}
+async function doLogin(){const e=$('lE')?.value.trim(),p=$('lP')?.value;if(!e||!p)return showErr(L('enterCreds'));const u=await GET('users',`?email=eq.${encodeURIComponent(e)}&password=eq.${encodeURIComponent(p)}`);if(!u?.length)return showErr(L('invalidCreds'));curUser=u[0];closeAuth();updateUI();toast(L('welcome')+curUser.name+' 👋');}
+async function doReg(){const n=$('rN')?.value.trim(),e=$('rE')?.value.trim(),ph=$('rPh')?.value.trim(),p=$('rP')?.value,p2=$('rP2')?.value;if(!n||!e||!p)return showErr(L('fillFields'));if(p.length<6)return showErr(L('pwShort'));if(p!==p2)return showErr(L('pwMismatch'));const ex=await GET('users',`?email=eq.${encodeURIComponent(e)}`);if(ex?.length)return showErr(L('emailExists'));const r=await POST('users',[{name:n,email:e,phone:ph,password:p,role:'user',governorate_id:selGov||null}]);if(!r?.length)return showErr(L('error'));curUser=r[0];closeAuth();updateUI();toast(L('welcome')+n+' 🎉');}
+function logout(){curUser=null;$('uDrop').classList.add('hidden');updateUI();goHome();toast(L('loggedOut'));}
 
-// ==================== HOME ====================
+// ===== HOME =====
 async function goHome(){
-  selTutor=null;$('userDrop')?.classList.add('hidden');window.scrollTo(0,0);
+  selT=null;$('uDrop')?.classList.add('hidden');window.scrollTo(0,0);
+  if(!cats.length)cats=await GET('categories','?order=sort_order')||[];
+  const gv=govs.find(g=>g.id===selGov);const govNm=gv?gn(gv):'';
   $('app').innerHTML=`
-    <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-14"><div class="max-w-7xl mx-auto px-4 text-center">
-      <h2 class="text-3xl md:text-4xl font-bold mb-3">اختر معلمك المثالي</h2>
-      <p class="text-lg mb-6 text-blue-100">احجز مواعيدك مع أفضل المعلمين في مختلف التخصصات</p>
-      <div class="max-w-2xl mx-auto relative"><svg class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input id="searchInput" oninput="renderTutors()" placeholder="ابحث عن معلم أو مادة..." class="w-full pr-12 pl-4 py-3.5 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"></div>
+    <!-- HERO SLIDER -->
+    <section class="hero-slider" id="heroSlider">
+      <div class="hero-slide active"><img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1400&h=600&fit=crop" alt="Education"></div>
+      <div class="hero-slide"><img src="https://images.unsplash.com/photo-1461896836934-bd45ba1b2990?w=1400&h=600&fit=crop" alt="Sports"></div>
+      <div class="hero-slide"><video src="https://cdn.pixabay.com/video/2020/05/25/39831-424974371_large.mp4" muted loop playsinline></video></div>
+      <div class="hero-slide"><img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=1400&h=600&fit=crop" alt="Adventure"></div>
+      <div class="hero-slide"><img src="https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1400&h=600&fit=crop" alt="Music"></div>
+      <div class="hero-slide"><video src="https://cdn.pixabay.com/video/2019/07/26/25521-350560498_large.mp4" muted loop playsinline></video></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="text-5xl mb-3">📦</div>
+        <h2 class="text-3xl md:text-4xl font-extrabold mb-2 drop-shadow-lg">${L('siteName')}</h2>
+        <p class="text-xl md:text-2xl font-bold mb-1 text-blue-200 drop-shadow">${L('heroTitle')}</p>
+        <p class="text-base text-blue-100 mb-1">${govNm?L('in_')+govNm:L('inOman')}</p>
+        <p class="text-sm text-white/70">${L('heroSub')}</p>
+      </div>
+      <div class="hero-arrows"><button class="hero-arrow" onclick="slideHero(-1)"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button><button class="hero-arrow" onclick="slideHero(1)"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+      <div class="hero-dots" id="heroDots"></div>
+    </section>
+    <!-- SEARCH BAR -->
+    <section class="bg-white py-4 shadow-sm border-b"><div class="max-w-3xl mx-auto px-4">
+      <div class="relative"><svg class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="sIn" oninput="renderT()" placeholder="${L('search')}" class="w-full pr-12 pl-5 py-3.5 rounded-xl text-gray-900 text-base border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"></div>
     </div></section>
-    <section class="py-5 bg-gray-50 border-b"><div class="max-w-7xl mx-auto px-4 flex flex-wrap gap-2" id="filterChips"></div></section>
-    <section class="py-10"><div class="max-w-7xl mx-auto px-4">
-      <h3 class="text-2xl font-bold mb-6">المعلمين المتاحين</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="tutorsGrid"><div class="col-span-full text-center py-10"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div></div></div>
+    <!-- CATEGORIES -->
+    <section class="py-6"><div class="max-w-7xl mx-auto px-4"><div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-9 gap-3" id="catG"></div></div></section>
+    <section class="py-3 border-b bg-white"><div class="max-w-7xl mx-auto px-4"><div class="flex flex-wrap gap-2.5 items-center" id="filts"></div></div></section>
+    <section class="py-8"><div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold" id="rTitle"></h3><span class="text-sm text-gray-500" id="rCount"></span></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="pGrid"><div class="col-span-full text-center py-8"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div></div></div>
     </div></section>
-    <footer class="bg-gray-900 text-white py-6"><div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-400">© 2026 منصة التعليم. جميع الحقوق محفوظة.</div></footer>`;
-  renderFilters();await loadTutors();
+    <footer class="bg-gray-900 text-white py-6"><div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-gray-400 text-sm">© 2026 ${L('siteName')}. ${L('allRights')}.</p>
+      <button onclick="$('devMod').classList.remove('hidden')" class="text-sm text-blue-400 hover:text-blue-300 font-semibold">${L('devBtn')}</button>
+    </div></footer>`;
+  renderCats();renderFilts();await loadT();initSlider();
 }
 
-let allTutors=[],curFilter='الكل';
-async function loadTutors(){
-  const teachers=await supaGet('teachers','?is_active=eq.true&order=rating.desc');
-  if(!teachers){$('tutorsGrid').innerHTML='<div class="col-span-full text-center py-10 text-red-500">❌ خطأ في الاتصال بقاعدة البيانات</div>';return;}
-  allTutors=teachers;renderTutors();
+function renderCats(){
+  const g=$('catG');if(!g)return;
+  g.innerHTML=`<button onclick="selCat=0;renderCats();loadT()" class="cat-card rounded-xl overflow-hidden relative h-24 flex items-end p-2.5 cursor-pointer ${selCat===0?'ring-2 ring-blue-500 ring-offset-2':''}"><div class="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900"></div><div class="relative text-white"><div class="text-xl">🌐</div><div class="text-sm font-bold">${L('all')}</div></div></button>`+
+  cats.map(c=>`<button onclick="selCat=${c.id};renderCats();loadT()" class="cat-card rounded-xl overflow-hidden relative h-24 flex items-end p-2.5 cursor-pointer ${selCat===c.id?'ring-2 ring-blue-500 ring-offset-2':''}"><img src="${c.image}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><div class="relative text-white"><div class="text-xl">${c.icon}</div><div class="text-sm font-bold leading-tight">${cn(c)}</div></div></button>`).join('');
 }
-function renderFilters(){
-  const cats=["الكل","رياضيات","فيزياء","لغة عربية","لغة إنجليزية","كيمياء","أحياء","برمجة","تاريخ"];
-  $('filterChips').innerHTML=cats.map(c=>`<button onclick="curFilter='${c}';renderFilters();renderTutors()" class="px-3 py-1.5 rounded-full text-sm transition-colors ${curFilter===c?'bg-blue-600 text-white':'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'}">${c}</button>`).join('');
+
+function renderFilts(){
+  const f=$('filts');if(!f)return;
+  f.innerHTML=`<select id="fGov" onchange="selGov=+this.value;selWil=0;updateFiltWil();loadT()" class="px-3 py-2 border rounded-lg text-sm"><option value="0">${L('allGov')}</option>${govs.map(g=>`<option value="${g.id}" ${selGov===g.id?'selected':''}>${gn(g)}</option>`).join('')}</select>
+    <select id="fWil" onchange="selWil=+this.value;renderT()" class="px-3 py-2 border rounded-lg text-sm ${selGov?'':'hidden'}"><option value="0">${L('allWil')}</option>${(selGov?wils.filter(w=>w.governorate_id===selGov):[]).map(w=>`<option value="${w.id}" ${selWil===w.id?'selected':''}>${wn(w)}</option>`).join('')}</select>
+    <select id="fMode" onchange="renderT()" class="px-3 py-2 border rounded-lg text-sm"><option value="">${L('all')}</option><option value="on">${L('online')}</option><option value="off">${L('inPerson')}</option></select>
+    <select id="fPrice" onchange="renderT()" class="px-3 py-2 border rounded-lg text-sm"><option value="">${L('allPrices')}</option><option value="0-10">${L('under10')}</option><option value="10-20">10-20 ${L('omr')}</option><option value="20+">${L('over20')}</option></select>
+    <select id="fAge" onchange="renderT()" class="px-3 py-2 border rounded-lg text-sm"><option value="">${L('allAges')}</option><option value="4-12">${L('kids')}</option><option value="12+">${L('youth')}</option><option value="18+">${L('adults')}</option></select>`;
 }
-function renderTutors(){
-  const s=($('searchInput')?.value||'');
-  const f=allTutors.filter(t=>{
-    const ms=!s||t.name.includes(s)||t.specialization.includes(s)||(t.subjects||[]).some(x=>x.includes(s));
-    const mf=curFilter==='الكل'||(t.subjects||[]).some(x=>x.includes(curFilter));
-    return ms&&mf;
+
+async function loadT(){
+  let q='?is_active=eq.true&order=rating.desc';if(selGov)q+=`&governorate_id=eq.${selGov}`;if(selCat)q+=`&category_id=eq.${selCat}`;if(selWil)q+=`&wilayat_id=eq.${selWil}`;
+  allT=await GET('teachers',q)||[];renderT();
+}
+function updateFiltWil(){const fw=$('fWil');if(!fw)return;const gid=selGov;fw.innerHTML=`<option value="0">${L('allWil')}</option>`+(gid?wils.filter(w=>w.governorate_id===gid):[]).map(w=>`<option value="${w.id}">${wn(w)}</option>`).join('');fw.classList.toggle('hidden',!gid);}
+
+function renderT(){
+  const s=($('sIn')?.value||'').toLowerCase();const mode=$('fMode')?.value||'';const price=$('fPrice')?.value||'';const age=$('fAge')?.value||'';
+  let f=allT.filter(p=>{
+    if(s&&!p.name_ar.includes(s)&&!(p.name_en||'').toLowerCase().includes(s)&&!(p.specialization_ar||'').includes(s)&&!(p.subjects||[]).some(x=>x.includes(s)))return false;
+    if(mode==='on'&&!p.is_online)return false;if(mode==='off'&&p.is_online)return false;
+    if(price==='0-10'&&p.hourly_rate>=10)return false;if(price==='10-20'&&(p.hourly_rate<10||p.hourly_rate>20))return false;if(price==='20+'&&p.hourly_rate<=20)return false;
+    if(age&&p.age_group!=='all'&&p.age_group!==age)return false;return true;
   });
-  const grid=$('tutorsGrid');if(!grid)return;
-  grid.innerHTML=f.length?f.map(t=>`
-    <div onclick="showProfile(${t.id})" class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer border border-gray-100 hover:border-blue-300 fade-in">
-      <div class="relative h-44 overflow-hidden bg-gray-200"><img src="${t.image}" alt="${t.name}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x300?text=👤'">
-        <div class="absolute top-3 right-3 bg-white px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg text-sm"><svg class="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><b>${t.rating}</b><span class="text-gray-400">(${t.review_count})</span></div></div>
-      <div class="p-4"><h4 class="text-lg font-bold mb-1">${t.name}</h4><p class="text-blue-600 text-sm mb-2">${t.specialization||''}</p>
-        <div class="flex flex-wrap gap-1.5 mb-3">${(t.subjects||[]).slice(0,3).map(s=>`<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">${s}</span>`).join('')}</div>
-        <div class="flex items-center justify-between pt-3 border-t border-gray-100"><div><div class="text-xs text-gray-500">السعر/الساعة</div><div class="text-xl font-bold">${t.hourly_rate} ر.ع</div></div><button class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">عرض الملف</button></div></div></div>`).join('')
-  :'<div class="col-span-full text-center py-10 text-gray-500">لم يتم العثور على معلمين</div>';
+  $('rTitle').textContent=L('results');$('rCount').textContent=f.length+' '+L('activity');
+  const grid=$('pGrid');if(!grid)return;
+  grid.innerHTML=f.length?f.map(p=>{const c=cats.find(x=>x.id===p.category_id);const g=govs.find(x=>x.id===p.governorate_id);const w=wils.find(x=>x.id===p.wilayat_id);return`
+    <div onclick="showProfile(${p.id})" class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer border border-gray-100 hover:border-blue-300 fade">
+      <div class="relative h-44 overflow-hidden bg-gray-200"><img src="${p.image}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+        <div class="absolute top-2.5 right-2.5 bg-white px-2.5 py-1 rounded-full flex items-center gap-1 shadow text-sm"><svg class="w-4 h-4 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><b>${p.rating}</b></div>
+        <div class="absolute top-2.5 left-2.5 flex gap-1.5">${c?`<span class="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-semibold">${c.icon} ${cn(c)}</span>`:''}${p.is_online?`<span class="bg-green-500 text-white px-2 py-0.5 rounded text-xs font-semibold">${L('online')}</span>`:''}</div>
+        ${g?`<div class="absolute bottom-2.5 right-2.5 bg-black/50 text-white px-2 py-0.5 rounded text-xs">📍 ${w?wn(w)+' - ':''}${gn(g)}</div>`:''}</div>
+      <div class="p-4"><h4 class="font-bold text-base mb-1">${pn(p)}</h4><p class="text-blue-600 text-sm mb-2">${ps(p)}</p>
+        <div class="flex flex-wrap gap-1.5 mb-3">${(p.subjects||[]).slice(0,3).map(s=>`<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">${s}</span>`).join('')}</div>
+        <div class="flex items-center justify-between pt-3 border-t"><div><div class="text-xs text-gray-500">${L('price')}</div><div class="text-xl font-bold">${p.hourly_rate} ${L('omr')}</div></div><button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">${L('view')}</button></div></div></div>`;}).join('')
+  :`<div class="col-span-full text-center py-10 text-gray-500">${L('noResults')}</div>`;
 }
 
-// ==================== PROFILE ====================
+// ===== PROFILE =====
 async function showProfile(id){
-  window.scrollTo(0,0);$('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
-  const ts=await supaGet('teachers',`?id=eq.${id}`);if(!ts||!ts.length)return goHome();
-  selTutor=ts[0];
-  const avail=await supaGet('availability',`?teacher_id=eq.${id}&order=id`)||[];
-  selTutor._avail=avail;
-  const revs=await supaGet('reviews',`?teacher_id=eq.${id}&order=created_at.desc&limit=5`)||[];
-  const t=selTutor;const colors=['bg-blue-600','bg-green-600','bg-purple-600','bg-amber-600','bg-pink-600'];
-  $('app').innerHTML=`<div class="max-w-7xl mx-auto px-4 py-6 fade-in">
-    <button onclick="goHome()" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-5 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>العودة للقائمة</button>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 space-y-5">
-        <div class="bg-white rounded-xl shadow-md p-5"><div class="flex flex-col md:flex-row gap-5">
-          <div class="relative"><img src="${t.image}" class="w-28 h-28 rounded-xl object-cover" onerror="this.src='https://via.placeholder.com/200?text=👤'"><div class="absolute -bottom-1.5 -left-1.5 bg-green-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold shadow">متاح</div></div>
-          <div class="flex-1"><h1 class="text-2xl font-bold mb-1">${t.name}</h1><p class="text-lg text-blue-600 mb-2">${t.specialization||''}</p>
-            <div class="flex flex-wrap gap-3 mb-3"><div class="flex items-center gap-1">${stars(Math.round(t.rating))}<span class="font-semibold mr-1">${t.rating}</span><span class="text-gray-500 text-sm">(${t.review_count})</span></div><span class="text-gray-600 text-sm">🏆 ${t.experience} سنوات</span></div>
-            <div class="flex flex-wrap gap-1.5">${(t.languages||[]).map(l=>`<span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">🌐 ${l}</span>`).join('')}</div></div></div></div>
-        <div class="bg-white rounded-xl shadow-md p-5"><h2 class="text-xl font-bold mb-3">نبذة عني</h2><p class="text-gray-700 leading-relaxed text-sm">${t.bio||'لا توجد نبذة'}</p></div>
-        <div class="bg-white rounded-xl shadow-md p-5"><h2 class="text-xl font-bold mb-3">المواد</h2><div class="grid grid-cols-2 md:grid-cols-3 gap-2">${(t.subjects||[]).map(s=>`<div class="flex items-center gap-2 p-2.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-100 text-sm">✅ ${s}</div>`).join('')}</div></div>
-        <div class="bg-white rounded-xl shadow-md p-5"><h2 class="text-xl font-bold mb-3">🕐 الأوقات المتاحة</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${avail.map(d=>`<div class="p-3 bg-gray-50 rounded-lg border"><div class="font-semibold mb-1.5 text-sm">${d.day_name}</div><div class="flex flex-wrap gap-1.5">${(d.slots||[]).map(s=>`<span class="px-2 py-0.5 bg-white text-gray-700 rounded text-xs border">${s}</span>`).join('')}</div></div>`).join('')}</div></div>
-        ${revs.length?`<div class="bg-white rounded-xl shadow-md p-5"><h2 class="text-xl font-bold mb-3">آراء الطلاب</h2><div class="space-y-3">${revs.map((r,i)=>`<div class="p-3 bg-gray-50 rounded-lg border"><div class="flex items-center justify-between mb-1.5"><div class="flex items-center gap-2"><div class="w-8 h-8 ${colors[i%5]} text-white rounded-full flex items-center justify-center text-xs font-bold">${r.reviewer_name[0]}</div><div><div class="font-semibold text-sm">${r.reviewer_name}</div></div></div><div>${stars(r.rating)}</div></div><p class="text-gray-700 text-sm">${r.comment}</p></div>`).join('')}</div></div>`:''}
-      </div>
-      <div><div class="bg-white rounded-xl shadow-lg p-5 sticky top-20 border-2 border-blue-100">
-        <div class="text-center mb-4"><div class="text-gray-600 text-sm mb-1">سعر الساعة</div><div class="text-3xl font-bold">${t.hourly_rate} ر.ع</div></div>
-        <div class="space-y-3 mb-4 text-sm text-gray-700"><div>📅 احجز موعدك المناسب</div><div>🕐 مواعيد مرنة</div><div>✅ ضمان الجودة</div></div>
-        <button onclick="startBooking()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold shadow-md">احجز الآن</button>
-        <div class="mt-3 p-3 bg-green-50 rounded-lg border border-green-200 text-xs text-green-800"><b>إلغاء مجاني</b> حتى 24 ساعة قبل الموعد</div>
-      </div></div>
-    </div></div>`;
+  window.scrollTo(0,0);$('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-7 h-7 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
+  const ps2=await GET('teachers',`?id=eq.${id}`);if(!ps2?.length)return goHome();selT=ps2[0];
+  const av=await GET('availability',`?teacher_id=eq.${id}&order=id`)||[];selT._av=av;
+  const rv=await GET('reviews',`?teacher_id=eq.${id}&order=created_at.desc&limit=5`)||[];
+  const p=selT,c=cats.find(x=>x.id===p.category_id),g=govs.find(x=>x.id===p.governorate_id),w=wils.find(x=>x.id===p.wilayat_id);
+  const cc=['bg-blue-600','bg-green-600','bg-purple-600','bg-amber-600','bg-pink-600'];
+  const arrow=lang==='ar'?'M9 18l6-6-6-6':'M15 18l-6-6 6-6';
+  $('app').innerHTML=`<div class="max-w-7xl mx-auto px-4 py-5 fade">
+    <button onclick="goHome()" class="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 mb-4 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="${arrow}"/></svg>${L('back')}</button>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-xl shadow-md p-5"><div class="flex flex-col md:flex-row gap-4">
+          <div class="relative"><img src="${p.image}" class="w-24 h-24 rounded-xl object-cover" onerror="this.style.display='none'"><div class="absolute -bottom-1 -left-1 bg-green-500 text-white px-1.5 py-0.5 rounded-full text-xs shadow">${L('available')}</div></div>
+          <div class="flex-1"><h1 class="text-xl font-bold mb-1">${pn(p)}</h1><p class="text-blue-600 text-sm mb-1.5">${ps(p)}</p>
+            <div class="flex flex-wrap gap-2 text-xs mb-2"><span>${stars(Math.round(p.rating))} <b>${p.rating}</b> (${p.review_count})</span><span>🏆 ${p.experience} ${L('years')}</span>${g?`<span>📍 ${w?wn(w)+', ':''}${gn(g)}</span>`:''}${p.is_online?`<span class="text-green-600">🟢 ${L('online')}</span>`:''}</div>
+            <div class="flex flex-wrap gap-1">${(p.languages||[]).map(l=>`<span class="px-1.5 py-0.5 bg-gray-100 rounded-full text-xs">🌐 ${l}</span>`).join('')}</div></div></div></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><h2 class="font-bold mb-2">${L('about')}</h2><p class="text-gray-700 text-sm leading-relaxed">${pb(p)||'-'}</p></div>
+        ${c?`<div class="bg-white rounded-xl shadow-md p-5"><h2 class="font-bold mb-2">${L('category')}</h2><span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm">${c.icon} ${cn(c)}</span></div>`:''}
+        <div class="bg-white rounded-xl shadow-md p-5"><h2 class="font-bold mb-2">${L('services')}</h2><div class="flex flex-wrap gap-1.5">${(p.subjects||[]).map(s=>`<span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs border border-blue-100">✅ ${s}</span>`).join('')}</div></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><h2 class="font-bold mb-2">🕐 ${L('schedule')}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${av.map(d=>`<div class="p-2.5 bg-gray-50 rounded-lg border text-xs"><b class="block mb-1">${d.day_name}</b><div class="flex flex-wrap gap-1">${(d.slots||[]).map(s=>`<span class="px-1.5 py-0.5 bg-white border rounded">${s}</span>`).join('')}</div></div>`).join('')}</div></div>
+        ${p.contact_whatsapp?`<div class="bg-white rounded-xl shadow-md p-5"><h2 class="font-bold mb-2">${L('contact')}</h2><a href="https://wa.me/${p.contact_whatsapp.replace(/[^0-9]/g,'')}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">📱 WhatsApp</a></div>`:''}
+        ${rv.length?`<div class="bg-white rounded-xl shadow-md p-5"><h2 class="font-bold mb-2">⭐ ${L('reviews')}</h2><div class="space-y-2">${rv.map((r,i)=>`<div class="p-2 bg-gray-50 rounded-lg border text-sm"><div class="flex justify-between mb-1"><div class="flex items-center gap-1.5"><div class="w-6 h-6 ${cc[i%5]} text-white rounded-full flex items-center justify-center text-xs font-bold">${r.reviewer_name[0]}</div><b class="text-xs">${r.reviewer_name}</b></div>${stars(r.rating)}</div><p class="text-gray-600 text-xs">${r.comment||''}</p></div>`).join('')}</div></div>`:''}</div>
+      <div><div class="bg-white rounded-xl shadow-lg p-5 sticky top-16 border-2 border-blue-100">
+        <div class="text-center mb-3"><div class="text-xs text-gray-500">${L('price')}</div><div class="text-3xl font-bold">${p.hourly_rate} ${L('omr')}</div></div>
+        <button onclick="startBook()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 mb-2">${L('bookNow')}</button>
+        <div class="p-2.5 bg-green-50 rounded-lg border border-green-200 text-xs text-green-800">✅ ${L('freeCancel')}</div>
+      </div></div></div></div>`;
 }
 
-// ==================== BOOKING ====================
-function startBooking(){
-  if(!curUser){toast('⚠️ سجّل دخولك أولاً');openAuth();return;}
-  bookStep=1;selDate=null;selTime='';selSubj='';renderBooking();
-}
-function renderBooking(){
-  const t=selTutor;if(!t)return;window.scrollTo(0,0);const avail=t._avail||[];
-  const stps=[1,2,3].map((s,i)=>`${i>0?`<div class="h-1 w-8 sm:w-14 ${bookStep>=s?'bg-blue-600':'bg-gray-200'}"></div>`:''}
-    <div class="flex items-center gap-1.5"><div class="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm ${bookStep>=s?'bg-blue-600 text-white':'bg-gray-200 text-gray-500'}">${bookStep>s?'✓':s}</div><span class="font-semibold hidden sm:inline text-xs ${bookStep>=s?'text-blue-600':'text-gray-400'}">${['التاريخ والوقت','المادة','بياناتك'][i]}</span></div>`).join('');
+// ===== BOOKING =====
+function startBook(){if(!curUser){toast(L('loginFirst'));openAuth();return;}bkStep=1;bkDate=null;bkTime='';bkSubj='';renderBook();}
+function renderBook(){
+  const p=selT;if(!p)return;window.scrollTo(0,0);const av=p._av||[];const arrow=lang==='ar'?'M9 18l6-6-6-6':'M15 18l-6-6 6-6';
+  const stps=[1,2,3].map((s,i)=>`${i>0?`<div class="h-1 w-6 sm:w-10 ${bkStep>=s?'bg-blue-600':'bg-gray-200'}"></div>`:''}<div class="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs ${bkStep>=s?'bg-blue-600 text-white':'bg-gray-200 text-gray-500'}">${bkStep>s?'✓':s}</div>`).join('');
   let body='';
-  if(bookStep===1){
+  if(bkStep===1){
     const days=Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i);return d;});
-    body=`<h3 class="text-xl font-bold mb-4">📅 اختر التاريخ والوقت</h3>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2 mb-6">${days.map((d,i)=>{
-        const dn=AD[d.getDay()];const av=avail.find(a=>a.day_name===dn);const has=av&&av.slots?.length;const sel=selDate?.toDateString()===d.toDateString();
-        return`<button onclick="pickDate(${i})" ${!has?'disabled':''} class="p-2 rounded-lg text-center text-xs transition-all ${sel?'bg-blue-600 text-white shadow-lg scale-105':has?'bg-white border-2 border-gray-200 hover:border-blue-300':'bg-gray-100 text-gray-400 cursor-not-allowed'}"><div class="mb-0.5">${dn}</div><div class="text-base font-bold">${d.getDate()}</div><div>${AM[d.getMonth()]}</div></button>`;}).join('')}</div>
-      ${selDate?`<h4 class="font-semibold mb-2 text-sm">🕐 اختر الوقت</h4><div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">${(avail.find(a=>a.day_name===AD[selDate.getDay()])?.slots||[]).map(s=>`<button onclick="pickTime('${s}')" class="py-2 rounded-lg font-semibold text-sm transition-all ${selTime===s?'bg-blue-600 text-white shadow-lg':'bg-white border-2 border-gray-200 hover:border-blue-300'}">${s}</button>`).join('')}</div>`:''}
-      ${selDate&&selTime?`<div class="flex justify-end"><button onclick="bookStep=2;renderBooking()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold text-sm">التالي</button></div>`:''}`;
-  }else if(bookStep===2){
-    body=`<h3 class="text-xl font-bold mb-4">📚 اختر المادة</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">${(t.subjects||[]).map(s=>`<button onclick="selSubj='${s}';renderBooking()" class="p-3 rounded-lg text-right font-semibold text-sm flex items-center gap-2 transition-all ${selSubj===s?'bg-blue-600 text-white shadow-lg':'bg-white border-2 border-gray-200 hover:border-blue-300'}"><div class="${selSubj===s?'bg-white text-blue-600':'bg-blue-50 text-blue-600'} w-8 h-8 rounded-lg flex items-center justify-center text-sm">📖</div>${s}</button>`).join('')}</div>
-      <div class="flex justify-between"><button onclick="bookStep=1;renderBooking()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold text-sm">السابق</button>${selSubj?`<button onclick="bookStep=3;renderBooking()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold text-sm">التالي</button>`:''}</div>`;
+    body=`<h3 class="font-bold mb-3 text-sm">📅 ${L('chooseDate')}</h3>
+      <div class="grid grid-cols-3 sm:grid-cols-7 gap-1.5 mb-3">${days.map((d,i)=>{const dn=DN[d.getDay()];const a=av.find(x=>x.day_name===dn);const h=a?.slots?.length;const sl=bkDate?.toDateString()===d.toDateString();
+        return`<button onclick="pickD(${i})" ${!h?'disabled':''} class="p-1.5 rounded-lg text-center text-xs ${sl?'bg-blue-600 text-white shadow':h?'bg-white border-2 border-gray-200 hover:border-blue-300':'bg-gray-100 text-gray-400 cursor-not-allowed'}"><div>${dn}</div><div class="text-sm font-bold">${d.getDate()}</div><div>${MN[d.getMonth()]}</div></button>`;}).join('')}</div>
+      ${bkDate?`<h4 class="font-semibold mb-1.5 text-xs">🕐 ${L('time')}</h4><div class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 mb-3">${(av.find(a=>a.day_name===DN[bkDate.getDay()])?.slots||[]).map(s=>`<button onclick="pickT('${s}')" class="py-1.5 rounded-lg text-xs font-semibold ${bkTime===s?'bg-blue-600 text-white shadow':'bg-white border-2 border-gray-200 hover:border-blue-300'}">${s}</button>`).join('')}</div>`:''}
+      ${bkDate&&bkTime?`<div class="flex justify-end"><button onclick="bkStep=2;renderBook()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold">${L('next')}</button></div>`:''}`;
+  }else if(bkStep===2){
+    body=`<h3 class="font-bold mb-3 text-sm">📚 ${L('chooseSvc')}</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">${(p.subjects||[]).map(s=>`<button onclick="bkSubj='${s}';renderBook()" class="p-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 ${bkSubj===s?'bg-blue-600 text-white shadow':'bg-white border-2 border-gray-200 hover:border-blue-300'}"><span class="${bkSubj===s?'bg-white text-blue-600':'bg-blue-50 text-blue-600'} w-7 h-7 rounded flex items-center justify-center text-xs">📖</span>${s}</button>`).join('')}</div>
+      <div class="flex justify-between"><button onclick="bkStep=1;renderBook()" class="bg-gray-200 px-5 py-2 rounded-lg text-sm font-semibold">${L('prev')}</button>${bkSubj?`<button onclick="bkStep=3;renderBook()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold">${L('next')}</button>`:''}</div>`;
   }else{
-    body=`<h3 class="text-xl font-bold mb-4">👤 بياناتك</h3><div class="space-y-3">
-      <div><label class="block text-sm font-semibold mb-1">الاسم *</label><input id="bName" value="${curUser?.name||''}" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">البريد *</label><input id="bEmail" value="${curUser?.email||''}" type="email" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div><label class="block text-sm font-semibold mb-1">الجوال *</label><input id="bPhone" value="${curUser?.phone||''}" type="tel" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"></div>
-      <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-100 text-sm"><h4 class="font-bold mb-2">ملخص الحجز</h4>
-        <div class="space-y-1.5"><div class="flex justify-between"><span class="text-gray-600">المعلم:</span><b>${t.name}</b></div><div class="flex justify-between"><span class="text-gray-600">المادة:</span><b>${selSubj}</b></div><div class="flex justify-between"><span class="text-gray-600">التاريخ:</span><b>${selDate?AD[selDate.getDay()]+' '+selDate.getDate()+' '+AM[selDate.getMonth()]:''}</b></div><div class="flex justify-between"><span class="text-gray-600">الوقت:</span><b>${selTime}</b></div>
-        <div class="border-t border-blue-200 pt-2 mt-2"><div class="flex justify-between text-base"><b>المجموع:</b><b class="text-blue-600">${t.hourly_rate} ر.ع</b></div></div></div></div>
-      <div class="flex justify-between"><button onclick="bookStep=2;renderBooking()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold text-sm">السابق</button><button onclick="confirmBooking()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold text-sm">✅ تأكيد الحجز</button></div></div>`;
+    body=`<h3 class="font-bold mb-3 text-sm">👤 ${L('yourInfo')}</h3><div class="space-y-2">
+      <input id="bN" value="${curUser?.name||''}" placeholder="${L('name')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <input id="bE" value="${curUser?.email||''}" type="email" placeholder="${L('email')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <input id="bPh" value="${curUser?.phone||''}" type="tel" placeholder="${L('phone')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+      <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-xs space-y-1"><div class="flex justify-between"><span>${L('service')}:</span><b>${bkSubj}</b></div><div class="flex justify-between"><span>${L('date')}:</span><b>${bkDate?DN[bkDate.getDay()]+' '+bkDate.getDate()+' '+MN[bkDate.getMonth()]:''}</b></div><div class="flex justify-between"><span>${L('time')}:</span><b>${bkTime}</b></div><div class="border-t border-blue-200 pt-1 mt-1 flex justify-between text-sm"><b>${L('total')}:</b><b class="text-blue-600">${p.hourly_rate} ${L('omr')}</b></div></div>
+      <div class="flex justify-between"><button onclick="bkStep=2;renderBook()" class="bg-gray-200 px-5 py-2 rounded-lg text-sm font-semibold">${L('prev')}</button><button onclick="doBook()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold">✅ ${L('confirm')}</button></div></div>`;
   }
-  $('app').innerHTML=`<div class="max-w-5xl mx-auto px-4 py-6 fade-in">
-    <button onclick="showProfile(${t.id})" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>العودة</button>
-    <div class="mb-6 flex items-center justify-center gap-2">${stps}</div>
-    <div class="bg-white rounded-xl shadow-md p-5"><div class="flex items-center gap-3 pb-4 border-b mb-4"><img src="${t.image}" class="w-12 h-12 rounded-lg object-cover"><div><div class="font-bold">${t.name}</div><div class="text-gray-600 text-xs">${t.specialization||''}</div></div></div>${body}</div></div>`;
+  $('app').innerHTML=`<div class="max-w-4xl mx-auto px-4 py-5 fade">
+    <button onclick="showProfile(${p.id})" class="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 mb-3 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="${arrow}"/></svg>${L('back')}</button>
+    <div class="mb-4 flex items-center justify-center gap-1.5">${stps}</div>
+    <div class="bg-white rounded-xl shadow-md p-5"><div class="flex items-center gap-3 pb-3 border-b mb-3"><img src="${p.image}" class="w-10 h-10 rounded-lg object-cover" onerror="this.style.display='none'"><div><div class="font-bold text-sm">${pn(p)}</div><div class="text-gray-500 text-xs">${ps(p)}</div></div></div>${body}</div></div>`;
 }
-function pickDate(i){const d=new Date();d.setDate(d.getDate()+i);selDate=d;selTime='';renderBooking();}
-function pickTime(t){selTime=t;renderBooking();}
-async function confirmBooking(){
-  const n=$('bName')?.value,e=$('bEmail')?.value,p=$('bPhone')?.value;
-  if(!n||!e||!p){toast('⚠️ أكمل البيانات');return;}
-  const bk={booking_code:'BK'+Date.now().toString().slice(-8),teacher_id:selTutor.id,teacher_name:selTutor.name,student_name:n,student_email:e,student_phone:p,subject:selSubj,booking_date:selDate.toISOString().slice(0,10),booking_time:selTime,price:selTutor.hourly_rate,status:'active'};
-  const res=await supaPost('bookings',[bk]);
-  if(!res||!res.length){toast('❌ خطأ في الحجز');return;}
-  curBooking=res[0];showConfirmation();toast('✅ تم الحجز!');
+function pickD(i){const d=new Date();d.setDate(d.getDate()+i);bkDate=d;bkTime='';renderBook();}
+function pickT(t){bkTime=t;renderBook();}
+async function doBook(){
+  const n=$('bN')?.value,e=$('bE')?.value,ph=$('bPh')?.value;if(!n||!e){toast(L('completeInfo'));return;}
+  const bk={booking_code:'BK'+Date.now().toString().slice(-8),teacher_id:selT.id,teacher_name:selT.name_ar,student_name:n,student_email:e,student_phone:ph||'',subject:bkSubj,booking_date:bkDate.toISOString().slice(0,10),booking_time:bkTime,price:selT.hourly_rate,status:'active'};
+  const r=await POST('bookings',[bk]);if(!r?.length){toast(L('error'));return;}curBook=r[0];showConf();toast('✅ '+L('confirmed'));
 }
-
-// ==================== CONFIRMATION ====================
-function showConfirmation(){
-  const b=curBooking,t=selTutor;if(!b||!t)return;window.scrollTo(0,0);
-  const bd=new Date(b.booking_date);
-  $('app').innerHTML=`<div class="min-h-[80vh] bg-gradient-to-br from-blue-50 to-green-50 py-10 fade-in"><div class="max-w-3xl mx-auto px-4">
-    <div class="text-center mb-6"><div class="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-3 bounce-in"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-      <h1 class="text-2xl font-bold mb-1">تم تأكيد الحجز بنجاح!</h1><p class="text-gray-600 text-sm">سيتم إرسال التفاصيل لبريدك</p></div>
-    <div class="bg-white rounded-2xl shadow-xl p-6 mb-5">
-      <div class="text-center pb-4 mb-4 border-b"><div class="text-xs text-gray-600">رقم الحجز</div><div class="text-xl font-bold text-blue-600 font-mono">${b.booking_code}</div></div>
-      <div class="flex items-center gap-3 pb-4 mb-4 border-b"><img src="${t.image}" class="w-14 h-14 rounded-xl object-cover"><div><h3 class="font-bold">${b.teacher_name}</h3><p class="text-gray-600 text-xs">${t.specialization||''}</p></div></div>
-      <div class="space-y-3 text-sm">
-        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg"><span class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">📅</span><div><div class="text-xs text-gray-600">التاريخ</div><b>${AD[bd.getDay()]} ${bd.getDate()} ${AM[bd.getMonth()]}</b></div></div>
-        <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg"><span class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white">🕐</span><div><div class="text-xs text-gray-600">الوقت</div><b>${b.booking_time}</b></div></div>
-        <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg"><span class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white">📚</span><div><div class="text-xs text-gray-600">المادة</div><b>${b.subject}</b></div></div>
-      </div>
-      <div class="mt-5 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-4 rounded-lg text-sm"><div class="flex justify-between mb-1"><span>السعر</span><b>${b.price} ر.ع</b></div><div class="border-t border-blue-400 pt-2 mt-2 flex justify-between text-lg"><b>المجموع</b><b>${b.price} ر.ع</b></div></div>
-    </div>
-    <div class="flex gap-3"><button onclick="goHome()" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold text-sm">🏠 الرئيسية</button><button onclick="window.print()" class="flex-1 bg-white text-gray-700 py-3 rounded-lg font-semibold border-2 text-sm">🖨️ طباعة</button></div>
+function showConf(){
+  const b=curBook,p=selT;if(!b||!p)return;window.scrollTo(0,0);const bd=new Date(b.booking_date);
+  $('app').innerHTML=`<div class="min-h-[80vh] bg-gradient-to-br from-blue-50 to-green-50 py-8 fade"><div class="max-w-2xl mx-auto px-4 text-center">
+    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 bounce-in"><svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    <h1 class="text-xl font-bold mb-1">${L('confirmed')}</h1>
+    <div class="bg-white rounded-2xl shadow-xl p-5 mt-4 text-sm"><div class="text-center pb-3 mb-3 border-b"><div class="text-xs text-gray-500">${L('bookNum')}</div><div class="text-lg font-bold text-blue-600 font-mono">${b.booking_code}</div></div>
+      <div class="space-y-2 text-right"><div class="flex justify-between"><span>📅</span><b>${DN[bd.getDay()]} ${bd.getDate()} ${MN[bd.getMonth()]}</b></div><div class="flex justify-between"><span>🕐</span><b>${b.booking_time}</b></div><div class="flex justify-between"><span>📚</span><b>${b.subject}</b></div><div class="flex justify-between border-t pt-2"><b>${L('total')}</b><b class="text-blue-600">${b.price} ${L('omr')}</b></div></div></div>
+    <div class="flex gap-2 mt-4"><button onclick="goHome()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold">🏠 ${L('home')}</button><button onclick="window.print()" class="flex-1 bg-white border-2 py-2.5 rounded-xl text-sm font-semibold">🖨️ ${L('print')}</button></div>
   </div></div>`;
 }
 
-// ==================== MY BOOKINGS ====================
-async function showMyBookings(){
-  if(!curUser){toast('⚠️ سجّل دخولك');openAuth();return;}
-  $('userDrop').classList.add('hidden');window.scrollTo(0,0);
-  $('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
-  const bks=await supaGet('bookings',`?student_email=eq.${encodeURIComponent(curUser.email)}&order=created_at.desc`)||[];
-  $('app').innerHTML=`<div class="max-w-5xl mx-auto px-4 py-6 fade-in">
-    <button onclick="goHome()" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-5 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>العودة</button>
-    <h2 class="text-2xl font-bold mb-5">📋 حجوزاتي</h2>
-    ${bks.length===0?'<div class="text-center py-14 text-gray-400"><div class="text-4xl mb-2">📭</div>لا توجد حجوزات</div>':
-    bks.map(b=>`<div class="bg-white rounded-xl p-4 border shadow-sm mb-3"><div class="flex items-center justify-between mb-2"><div><div class="font-semibold text-sm">${b.teacher_name}</div><div class="text-xs text-gray-500">${b.subject}</div></div>
-      <span class="px-2 py-0.5 rounded-full text-xs font-bold ${b.status==='active'?'bg-green-50 text-green-600':b.status==='cancelled'?'bg-red-50 text-red-600':'bg-amber-50 text-amber-600'}">${b.status==='active'?'مؤكد':b.status==='cancelled'?'ملغي':b.status==='completed'?'مكتمل':'معلّق'}</span></div>
-      <div class="text-xs text-gray-500">📅 ${b.booking_date} · 🕐 ${b.booking_time} · 💰 ${b.price} ر.ع</div></div>`).join('')}
+// ===== MY BOOKINGS =====
+async function showMyBook(){
+  if(!curUser){toast(L('loginFirst'));openAuth();return;}$('uDrop').classList.add('hidden');window.scrollTo(0,0);
+  $('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-7 h-7 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
+  const bks=await GET('bookings',`?student_email=eq.${encodeURIComponent(curUser.email)}&order=created_at.desc`)||[];
+  const arrow=lang==='ar'?'M9 18l6-6-6-6':'M15 18l-6-6 6-6';
+  $('app').innerHTML=`<div class="max-w-5xl mx-auto px-4 py-5 fade">
+    <button onclick="goHome()" class="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 mb-4 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="${arrow}"/></svg>${L('back')}</button>
+    <h2 class="text-xl font-bold mb-4">📋 ${L('myBook')}</h2>
+    ${bks.length?bks.map(b=>`<div class="bg-white rounded-xl p-4 border shadow-sm mb-2 text-sm"><div class="flex items-center justify-between mb-1.5"><div><b>${b.teacher_name}</b><span class="text-gray-500 mx-1.5">·</span><span class="text-gray-600">${b.subject}</span></div>
+      <span class="px-2 py-0.5 rounded-full text-xs font-bold ${b.status==='active'?'bg-green-50 text-green-600':b.status==='cancelled'?'bg-red-50 text-red-600':b.status==='completed'?'bg-blue-50 text-blue-600':'bg-amber-50 text-amber-600'}">${b.status==='active'?L('active'):b.status==='cancelled'?L('cancelled'):b.status==='completed'?L('completed'):L('pending')}</span></div>
+      <div class="text-xs text-gray-500">📅 ${b.booking_date} · 🕐 ${b.booking_time} · 💰 ${b.price} ${L('omr')}</div></div>`).join('')
+    :`<div class="text-center py-14 text-gray-400"><div class="text-4xl mb-2">📭</div>${L('noBook')}</div>`}
   </div>`;
 }
 
-// ==================== TEACHER DASHBOARD ====================
+// ===== PROVIDER DASHBOARD =====
 async function showTeacherDash(){
-  if(!curUser||curUser.role!=='teacher')return;
-  $('userDrop').classList.add('hidden');window.scrollTo(0,0);
-  $('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
-  const ts=await supaGet('teachers',`?user_id=eq.${curUser.id}`)||[];
-  if(!ts.length){$('app').innerHTML='<div class="text-center py-20 text-gray-500">لم يتم العثور على بيانات المعلم</div>';return;}
-  const teacher=ts[0];
-  const avail=await supaGet('availability',`?teacher_id=eq.${teacher.id}&order=id`)||[];
-  const bks=await supaGet('bookings',`?teacher_id=eq.${teacher.id}&order=created_at.desc`)||[];
-  const active=bks.filter(b=>b.status==='active').length;
-  const rev=await supaGet('reviews',`?teacher_id=eq.${teacher.id}&order=created_at.desc&limit=5`)||[];
-  const totalEarnings=bks.filter(b=>b.status==='active'||b.status==='completed').reduce((s,b)=>s+(+b.price||0),0);
+  if(!curUser||curUser.role!=='teacher')return;$('uDrop').classList.add('hidden');window.scrollTo(0,0);
+  $('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-7 h-7 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
+  const ps2=await GET('teachers',`?user_id=eq.${curUser.id}`)||[];
+  if(!ps2.length){$('app').innerHTML=`<div class="text-center py-20 text-gray-500">${L('noData')}</div>`;return;}
+  const prov=ps2[0];const av=await GET('availability',`?teacher_id=eq.${prov.id}&order=id`)||[];
+  const bks=await GET('bookings',`?teacher_id=eq.${prov.id}&order=created_at.desc`)||[];
+  const rvs=await GET('reviews',`?teacher_id=eq.${prov.id}&order=created_at.desc&limit=10`)||[];
+  const actv=bks.filter(b=>b.status==='active').length;
+  const earn=bks.filter(b=>b.status!=='cancelled').reduce((s,b)=>s+(+b.price||0),0);
+  window._tch=prov;window._pAv=av;window._pBk=bks;window._pRv=rvs;
 
-  $('app').innerHTML=`<div class="max-w-6xl mx-auto px-4 py-6 fade-in">
-    <button onclick="goHome()" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
-    <div class="bg-gradient-to-br from-green-600 to-green-800 text-white rounded-xl p-5 mb-5"><div class="flex items-center gap-4"><img src="${teacher.image}" class="w-16 h-16 rounded-xl object-cover border-2 border-white/30" onerror="this.src='https://via.placeholder.com/100?text=👤'"><div><h2 class="text-xl font-bold">مرحباً ${teacher.name}</h2><p class="text-green-200 text-sm">لوحة تحكم المعلم</p></div></div></div>
-
-    <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl mb-1">📅</div><div class="text-2xl font-bold">${bks.length}</div><div class="text-xs text-gray-500">إجمالي الحجوزات</div></div>
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl mb-1">✅</div><div class="text-2xl font-bold">${active}</div><div class="text-xs text-gray-500">حجوزات نشطة</div></div>
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl mb-1">⭐</div><div class="text-2xl font-bold">${teacher.rating}</div><div class="text-xs text-gray-500">التقييم</div></div>
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl mb-1">💰</div><div class="text-2xl font-bold">${totalEarnings}</div><div class="text-xs text-gray-500">إيرادات (ر.ع)</div></div>
+  $('app').innerHTML=`<div class="max-w-6xl mx-auto px-4 py-5 fade">
+    <button onclick="goHome()" class="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 mb-3 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="${lang==='ar'?'M9 18l6-6-6-6':'M15 18l-6-6 6-6'}"/></svg>${L('home')}</button>
+    <div class="bg-gradient-to-br from-green-600 to-green-800 text-white rounded-xl p-5 mb-4"><div class="flex items-center gap-3"><img src="${prov.image}" class="w-14 h-14 rounded-xl object-cover border-2 border-white/30" onerror="this.style.display='none'"><div><h2 class="text-lg font-bold">${L('welcome')}${prov.name_ar}</h2><p class="text-green-200 text-xs">${L('welcProv')}</p></div></div></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">📅</div><div class="text-xl font-bold">${bks.length}</div><div class="text-xs text-gray-500">${L('totalBook')}</div></div>
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">✅</div><div class="text-xl font-bold">${actv}</div><div class="text-xs text-gray-500">${L('activeBook')}</div></div>
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">⭐</div><div class="text-xl font-bold">${prov.rating}</div><div class="text-xs text-gray-500">${L('rating')}</div></div>
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">💰</div><div class="text-xl font-bold">${earn}</div><div class="text-xs text-gray-500">${L('earnings')} ${L('omr')}</div></div>
     </div>
-
-    <!-- Tabs -->
-    <div class="flex gap-1.5 bg-white p-1 rounded-xl border mb-5" id="tTabs">
-      <button onclick="showTTab('profile')" class="flex-1 py-2 rounded-lg font-semibold text-sm bg-green-600 text-white" id="ttProfile">📝 ملفي</button>
-      <button onclick="showTTab('schedule')" class="flex-1 py-2 rounded-lg font-semibold text-sm text-gray-600" id="ttSchedule">🕐 المواعيد</button>
-      <button onclick="showTTab('bookings')" class="flex-1 py-2 rounded-lg font-semibold text-sm text-gray-600" id="ttBookings">📅 الحجوزات</button>
-      <button onclick="showTTab('reviews')" class="flex-1 py-2 rounded-lg font-semibold text-sm text-gray-600" id="ttReviews">⭐ التقييمات</button>
+    <div class="flex gap-1 bg-white p-1 rounded-xl border mb-4 overflow-x-auto">
+      <button onclick="pTab('prof')" class="flex-1 py-2 rounded-lg font-semibold text-xs bg-green-600 text-white whitespace-nowrap px-2" id="pt_prof">📝 ${L('myProfile')}</button>
+      <button onclick="pTab('sched')" class="flex-1 py-2 rounded-lg font-semibold text-xs text-gray-600 whitespace-nowrap px-2" id="pt_sched">🕐 ${L('manageSchedule')}</button>
+      <button onclick="pTab('bk')" class="flex-1 py-2 rounded-lg font-semibold text-xs text-gray-600 whitespace-nowrap px-2" id="pt_bk">📅 ${L('myBookings')}</button>
+      <button onclick="pTab('rv')" class="flex-1 py-2 rounded-lg font-semibold text-xs text-gray-600 whitespace-nowrap px-2" id="pt_rv">⭐ ${L('myReviews')}</button>
     </div>
-    <div id="tContent"></div>
-  </div>`;
-
-  window._teacher=teacher;window._tAvail=avail;window._tBooks=bks;window._tRevs=rev;
-  showTTab('profile');
+    <div id="pCont"></div></div>`;
+  pTab('prof');
 }
 
-function showTTab(tab){
-  ['ttProfile','ttSchedule','ttBookings','ttReviews'].forEach(id=>{const el=$(id);if(el)el.className='flex-1 py-2 rounded-lg font-semibold text-sm '+(id==='tt'+tab.charAt(0).toUpperCase()+tab.slice(1)?'bg-green-600 text-white':'text-gray-600 hover:bg-gray-50');});
-  const t=window._teacher;
-  if(tab==='profile'){
-    $('tContent').innerHTML=`<div class="bg-white rounded-xl p-5 border">
-      <h3 class="font-bold mb-4">📝 تعديل الملف الشخصي</h3>
-      <div class="space-y-3">
-        <div><label class="block text-sm font-semibold mb-1">الصورة (رابط URL)</label><input id="tImg" value="${t.image||''}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none" dir="ltr"></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div><label class="block text-sm font-semibold mb-1">الاسم</label><input id="tName" value="${t.name||''}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none"></div>
-          <div><label class="block text-sm font-semibold mb-1">التخصص</label><input id="tSpec" value="${t.specialization||''}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none"></div>
-        </div>
-        <div><label class="block text-sm font-semibold mb-1">نبذة عني</label><textarea id="tBio" rows="3" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none">${t.bio||''}</textarea></div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div><label class="block text-sm font-semibold mb-1">سعر الساعة (ر.ع)</label><input id="tPrice" type="number" value="${t.hourly_rate||0}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none"></div>
-          <div><label class="block text-sm font-semibold mb-1">سنوات الخبرة</label><input id="tExp" type="number" value="${t.experience||0}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none"></div>
-          <div><label class="block text-sm font-semibold mb-1">اللغات (فاصلة)</label><input id="tLangs" value="${(t.languages||[]).join('، ')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none"></div>
-        </div>
-        <div><label class="block text-sm font-semibold mb-1">المواد الدراسية (فاصلة)</label><input id="tSubs" value="${(t.subjects||[]).join('، ')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none"></div>
-        ${t.image?`<div><label class="block text-sm font-semibold mb-1">معاينة الصورة</label><img src="${t.image}" class="w-24 h-24 rounded-xl object-cover border" onerror="this.style.display='none'"></div>`:''}
-        <button onclick="saveTeacherProfile(${t.id})" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-green-700">💾 حفظ التعديلات</button>
-      </div></div>`;
-  }else if(tab==='schedule'){
-    const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
-    const avail=window._tAvail||[];
-    $('tContent').innerHTML=`<div class="bg-white rounded-xl p-5 border">
-      <h3 class="font-bold mb-4">🕐 إدارة المواعيد</h3>
-      <div class="space-y-3">${days.map(d=>{const av=avail.find(a=>a.day_name===d);return`<div class="p-3 bg-gray-50 rounded-lg border"><div class="font-semibold text-sm mb-1.5">${d}</div><input id="slot_${d}" value="${(av?.slots||[]).join('، ')}" placeholder="09:00، 10:00، 14:00" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-green-500 focus:outline-none" dir="ltr"><div class="text-xs text-gray-400 mt-1">أدخل الأوقات مفصولة بفاصلة</div></div>`;}).join('')}
-        <button onclick="saveSchedule(${t.id})" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-green-700">💾 حفظ المواعيد</button>
-      </div></div>`;
-  }else if(tab==='bookings'){
-    const bks=window._tBooks||[];
-    $('tContent').innerHTML=`<div class="bg-white rounded-xl p-5 border"><h3 class="font-bold mb-4">📅 حجوزاتي (${bks.length})</h3>
-      ${bks.length?bks.map(b=>`<div class="p-3 bg-gray-50 rounded-lg border mb-2 text-sm"><div class="flex justify-between mb-1"><b>${b.student_name}</b><span class="px-2 py-0.5 rounded-full text-xs font-bold ${b.status==='active'?'bg-green-50 text-green-600':b.status==='cancelled'?'bg-red-50 text-red-600':'bg-amber-50 text-amber-600'}">${b.status==='active'?'مؤكد':b.status==='cancelled'?'ملغي':'مكتمل'}</span></div>
-        <div class="text-gray-500 text-xs">📚 ${b.subject} · 📅 ${b.booking_date} · 🕐 ${b.booking_time} · 💰 ${b.price} ر.ع</div></div>`).join(''):'<div class="text-center py-8 text-gray-400">لا توجد حجوزات</div>'}
-    </div>`;
+function pTab(t){
+  ['prof','sched','bk','rv'].forEach(x=>{const e=$('pt_'+x);if(e)e.className='flex-1 py-2 rounded-lg font-semibold text-xs whitespace-nowrap px-2 '+(x===t?'bg-green-600 text-white':'text-gray-600 hover:bg-gray-50');});
+  const p=window._tch;
+  if(t==='prof'){
+    $('pCont').innerHTML=`<div class="bg-white rounded-xl p-5 border"><h3 class="font-bold mb-3 text-sm">📝 ${L('myProfile')}</h3><div class="space-y-2.5">
+      <div><label class="block text-xs font-semibold mb-1">${L('imgUrl')}</label><input id="pImg" value="${p.image||''}" dir="ltr" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div><label class="block text-xs font-semibold mb-1">${L('name')} (عربي)</label><input id="pNa" value="${p.name_ar||''}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+        <div><label class="block text-xs font-semibold mb-1">${L('name')} (EN)</label><input id="pNe" value="${p.name_en||''}" dir="ltr" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div><label class="block text-xs font-semibold mb-1">${L('spec')} (عربي)</label><input id="pSa" value="${p.specialization_ar||''}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+        <div><label class="block text-xs font-semibold mb-1">${L('spec')} (EN)</label><input id="pSe" value="${p.specialization_en||''}" dir="ltr" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+      </div>
+      <div><label class="block text-xs font-semibold mb-1">${L('bio')} (عربي)</label><textarea id="pBa" rows="2" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none">${p.bio_ar||''}</textarea></div>
+      <div><label class="block text-xs font-semibold mb-1">${L('bio')} (EN)</label><textarea id="pBe" rows="2" dir="ltr" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none">${p.bio_en||''}</textarea></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div><label class="block text-xs font-semibold mb-1">${L('priceH')} (${L('omr')})</label><input id="pPr" type="number" value="${p.hourly_rate||0}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+        <div><label class="block text-xs font-semibold mb-1">${L('exp')}</label><input id="pEx" type="number" value="${p.experience||0}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+        <div><label class="block text-xs font-semibold mb-1">${L('langs')}</label><input id="pLn" value="${(p.languages||[]).join('، ')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+      </div>
+      <div><label class="block text-xs font-semibold mb-1">${L('subjects')}</label><input id="pSb" value="${(p.subjects||[]).join('، ')}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div><label class="block text-xs font-semibold mb-1">${L('category')}</label><select id="pCat" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none">${cats.map(c=>`<option value="${c.id}" ${c.id===p.category_id?'selected':''}>${cn(c)}</option>`).join('')}</select></div>
+        <div><label class="block text-xs font-semibold mb-1">📍 ${L('allGov').replace('جميع ','')}</label><select id="pGov" onchange="updatePWil()" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none">${govs.map(g=>`<option value="${g.id}" ${g.id===p.governorate_id?'selected':''}>${gn(g)}</option>`).join('')}</select></div>
+        <div><label class="block text-xs font-semibold mb-1">📍 ${L('allWil').replace('جميع ','')}</label><select id="pWil" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none">${wils.filter(w=>w.governorate_id===p.governorate_id).map(w=>`<option value="${w.id}" ${w.id===p.wilayat_id?'selected':''}>${wn(w)}</option>`).join('')}</select></div>
+      </div>
+      <div class="flex items-center gap-4"><label class="flex items-center gap-1.5 text-xs"><input type="checkbox" id="pOn" ${p.is_online?'checked':''}> ${L('online')}</label></div>
+      <button onclick="saveTeacher()" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-green-700">${L('save')}</button>
+    </div></div>`;
+  }else if(t==='sched'){
+    const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];const av=window._pAv||[];
+    $('pCont').innerHTML=`<div class="bg-white rounded-xl p-5 border"><h3 class="font-bold mb-3 text-sm">🕐 ${L('manageSchedule')}</h3><div class="space-y-2">${days.map(d=>{const a=av.find(x=>x.day_name===d);return`<div class="p-2.5 bg-gray-50 rounded-lg border"><div class="font-semibold text-xs mb-1">${d}</div><input id="sl_${d}" value="${(a?.slots||[]).join('، ')}" placeholder="09:00، 10:00، 14:00" dir="ltr" class="w-full px-3 py-1.5 border-2 border-gray-200 rounded-lg text-xs focus:border-green-500 focus:outline-none"><div class="text-xs text-gray-400 mt-0.5">${L('slotsHint')}</div></div>`;}).join('')}
+      <button onclick="saveSched()" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-green-700">${L('save')}</button></div></div>`;
+  }else if(t==='bk'){
+    const bks=window._pBk||[];
+    $('pCont').innerHTML=`<div class="bg-white rounded-xl p-5 border"><h3 class="font-bold mb-3 text-sm">📅 ${L('myBookings')} (${bks.length})</h3>
+      ${bks.length?bks.map(b=>`<div class="p-2.5 bg-gray-50 rounded-lg border mb-2 text-xs"><div class="flex justify-between mb-1"><b>${b.student_name}</b><span class="px-2 py-0.5 rounded-full font-bold ${b.status==='active'?'bg-green-50 text-green-600':b.status==='cancelled'?'bg-red-50 text-red-600':'bg-amber-50 text-amber-600'}">${b.status==='active'?L('active'):b.status==='cancelled'?L('cancelled'):L('completed')}</span></div><div class="text-gray-500">📚 ${b.subject} · 📅 ${b.booking_date} · 🕐 ${b.booking_time} · 💰 ${b.price} ${L('omr')}</div></div>`).join(''):`<div class="text-center py-8 text-gray-400">${L('noBook')}</div>`}</div>`;
   }else{
-    const revs=window._tRevs||[];
-    $('tContent').innerHTML=`<div class="bg-white rounded-xl p-5 border"><h3 class="font-bold mb-4">⭐ التقييمات (${revs.length})</h3>
-      ${revs.length?revs.map(r=>`<div class="p-3 bg-gray-50 rounded-lg border mb-2 text-sm"><div class="flex justify-between mb-1"><b>${r.reviewer_name}</b><div>${stars(r.rating)}</div></div><p class="text-gray-600 text-xs">${r.comment||''}</p></div>`).join(''):'<div class="text-center py-8 text-gray-400">لا توجد تقييمات</div>'}
-    </div>`;
+    const rvs=window._pRv||[];
+    $('pCont').innerHTML=`<div class="bg-white rounded-xl p-5 border"><h3 class="font-bold mb-3 text-sm">⭐ ${L('myReviews')} (${rvs.length})</h3>
+      ${rvs.length?rvs.map(r=>`<div class="p-2.5 bg-gray-50 rounded-lg border mb-2 text-xs"><div class="flex justify-between mb-1"><b>${r.reviewer_name}</b>${stars(r.rating)}</div><p class="text-gray-600">${r.comment||''}</p></div>`).join(''):`<div class="text-center py-8 text-gray-400">${L('noReview')}</div>`}</div>`;
   }
 }
 
-async function saveTeacherProfile(id){
-  const data={name:$('tName').value,image:$('tImg').value,specialization:$('tSpec').value,bio:$('tBio').value,hourly_rate:+$('tPrice').value,experience:+$('tExp').value,
-    languages:$('tLangs').value.split(/[,،]/).map(s=>s.trim()).filter(Boolean),
-    subjects:$('tSubs').value.split(/[,،]/).map(s=>s.trim()).filter(Boolean)};
-  const r=await supaPatch('teachers',data,`?id=eq.${id}`);
-  if(r)toast('✅ تم الحفظ!');else toast('❌ خطأ');
-  showTeacherDash();
+async function saveTeacher(){
+  const p=window._tch;
+  const d={name_ar:$('pNa').value,name_en:$('pNe').value,image:$('pImg').value,specialization_ar:$('pSa').value,specialization_en:$('pSe').value,bio_ar:$('pBa').value,bio_en:$('pBe').value,hourly_rate:+$('pPr').value,experience:+$('pEx').value,
+    languages:$('pLn').value.split(/[,،]/).map(s=>s.trim()).filter(Boolean),subjects:$('pSb').value.split(/[,،]/).map(s=>s.trim()).filter(Boolean),
+    category_id:+$('pCat').value,governorate_id:+$('pGov').value,wilayat_id:+($('pWil')?.value||0),is_online:$('pOn').checked};
+  await PATCH('teachers',d,`?id=eq.${p.id}`);toast(L('saved'));showTeacherDash();
 }
-async function saveSchedule(tid){
-  const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
-  for(const d of days){
-    const val=$('slot_'+d)?.value||'';
-    const slots=val.split(/[,،]/).map(s=>s.trim()).filter(Boolean);
-    await supaDel('availability',`?teacher_id=eq.${tid}&day_name=eq.${encodeURIComponent(d)}`);
-    if(slots.length)await supaPost('availability',[{teacher_id:tid,day_name:d,slots}]);
-  }
-  toast('✅ تم حفظ المواعيد!');showTeacherDash();
+function updatePWil(){const gid=+($('pGov')?.value||0);const ws=$('pWil');if(!ws)return;ws.innerHTML=wils.filter(w=>w.governorate_id===gid).map(w=>`<option value="${w.id}">${wn(w)}</option>`).join('');}
+async function saveSched(){
+  const pid=window._tch.id;const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  for(const d of days){const v=$('sl_'+d)?.value||'';const slots=v.split(/[,،]/).map(s=>s.trim()).filter(Boolean);
+    await DEL('availability',`?teacher_id=eq.${pid}&day_name=eq.${encodeURIComponent(d)}`);
+    if(slots.length)await POST('availability',[{teacher_id:pid,day_name:d,slots}]);}
+  toast(L('schedSaved'));showTeacherDash();
 }
 
-// ==================== ADMIN PANEL ====================
+// ===== ADMIN PANEL =====
 async function showAdmin(){
-  if(!curUser||curUser.role!=='admin')return;
-  $('userDrop').classList.add('hidden');window.scrollTo(0,0);
-  $('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
-  const users=await supaGet('users','?order=id')||[];
-  const bks=await supaGet('bookings','?order=created_at.desc')||[];
-  const teachers=await supaGet('teachers','?order=id')||[];
-  const totalRev=bks.filter(b=>b.status!=='cancelled').reduce((s,b)=>s+(+b.price||0),0);
-  window._aUsers=users;window._aBooks=bks;window._aTeachers=teachers;
+  if(!curUser||curUser.role!=='admin')return;$('uDrop').classList.add('hidden');window.scrollTo(0,0);
+  $('app').innerHTML='<div class="flex items-center justify-center py-20"><div class="w-7 h-7 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>';
+  const users=await GET('users','?order=id')||[];const bks=await GET('bookings','?order=created_at.desc')||[];const provs=await GET('teachers','?order=id')||[];
+  const rev=bks.filter(b=>b.status!=='cancelled').reduce((s,b)=>s+(+b.price||0),0);
+  window._aU=users;window._aB=bks;window._aT=provs;
 
-  $('app').innerHTML=`<div class="max-w-7xl mx-auto px-4 py-6 fade-in">
-    <button onclick="goHome()" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
-    <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl p-5 mb-5"><h2 class="text-xl font-bold">⚙️ لوحة التحكم</h2><p class="text-blue-200 text-sm mt-0.5">إدارة المستخدمين والمعلمين والحجوزات</p></div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl">👥</div><div class="text-2xl font-bold">${users.length}</div><div class="text-xs text-gray-500">مستخدمون</div></div>
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl">👨‍🏫</div><div class="text-2xl font-bold">${teachers.length}</div><div class="text-xs text-gray-500">معلمون</div></div>
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl">📅</div><div class="text-2xl font-bold">${bks.length}</div><div class="text-xs text-gray-500">حجوزات</div></div>
-      <div class="bg-white rounded-xl p-4 border"><div class="text-xl">💰</div><div class="text-2xl font-bold">${totalRev} ر.ع</div><div class="text-xs text-gray-500">إيرادات</div></div>
+  $('app').innerHTML=`<div class="max-w-7xl mx-auto px-4 py-5 fade">
+    <button onclick="goHome()" class="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 mb-3 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="${lang==='ar'?'M9 18l6-6-6-6':'M15 18l-6-6 6-6'}"/></svg>${L('home')}</button>
+    <div class="bg-gradient-to-br from-blue-600 to-indigo-800 text-white rounded-xl p-5 mb-4"><h2 class="text-lg font-bold">⚙️ ${L('adminPanel')}</h2></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">👥</div><div class="text-xl font-bold">${users.length}</div><div class="text-xs text-gray-500">${L('users')}</div></div>
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">👨‍🏫</div><div class="text-xl font-bold">${provs.length}</div><div class="text-xs text-gray-500">${L('teachers')}</div></div>
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">📅</div><div class="text-xl font-bold">${bks.length}</div><div class="text-xs text-gray-500">${L('bookings')}</div></div>
+      <div class="bg-white rounded-xl p-3 border"><div class="text-lg">💰</div><div class="text-xl font-bold">${rev} ${L('omr')}</div><div class="text-xs text-gray-500">${L('revenue')}</div></div>
     </div>
-    <div class="flex gap-1.5 bg-white p-1 rounded-xl border mb-5">
-      <button onclick="showATab('users')" class="flex-1 py-2 rounded-lg font-semibold text-sm bg-blue-600 text-white" id="auUsers">👥 مستخدمون</button>
-      <button onclick="showATab('teachers')" class="flex-1 py-2 rounded-lg font-semibold text-sm text-gray-600" id="auTeachers">👨‍🏫 معلمون</button>
-      <button onclick="showATab('bookings')" class="flex-1 py-2 rounded-lg font-semibold text-sm text-gray-600" id="auBookings">📅 حجوزات</button>
+    <div class="flex gap-1 bg-white p-1 rounded-xl border mb-4">
+      <button onclick="aTab('u')" class="flex-1 py-2 rounded-lg font-semibold text-xs bg-blue-600 text-white" id="at_u">👥 ${L('users')}</button>
+      <button onclick="aTab('p')" class="flex-1 py-2 rounded-lg font-semibold text-xs text-gray-600" id="at_p">👨‍🏫 ${L('teachers')}</button>
+      <button onclick="aTab('b')" class="flex-1 py-2 rounded-lg font-semibold text-xs text-gray-600" id="at_b">📅 ${L('bookings')}</button>
     </div>
-    <div id="aContent"></div>
-  </div>`;
-  showATab('users');
+    <div id="aCont"></div></div>`;
+  aTab('u');
 }
 
-function showATab(tab){
-  ['auUsers','auTeachers','auBookings'].forEach(id=>{const el=$(id);if(el)el.className='flex-1 py-2 rounded-lg font-semibold text-sm '+(id==='au'+tab.charAt(0).toUpperCase()+tab.slice(1)?'bg-blue-600 text-white':'text-gray-600 hover:bg-gray-50');});
-  if(tab==='users'){
-    const users=window._aUsers||[];
-    $('aContent').innerHTML=users.map(u=>`<div class="bg-white rounded-xl p-4 border shadow-sm mb-2">
-      <div class="flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-9 h-9 rounded-lg ${u.role==='admin'?'bg-red-500':u.role==='teacher'?'bg-green-500':'bg-blue-600'} text-white flex items-center justify-center font-bold text-sm">${u.name[0]}</div><div><div class="font-semibold text-sm">${u.name}</div><div class="text-xs text-gray-500">${u.email}</div></div></div>
-      <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${u.role==='admin'?'bg-red-50 text-red-600':u.role==='teacher'?'bg-green-50 text-green-600':'bg-blue-50 text-blue-600'}">${u.role==='admin'?'مدير':u.role==='teacher'?'معلم':'مستخدم'}</span></div></div>
-      ${u.role!=='admin'?`<div class="flex gap-1.5 justify-end mt-2">
-        <button onclick="changeRole(${u.id},'user')" class="px-2 py-1 text-xs border rounded-lg ${u.role==='user'?'bg-blue-50 text-blue-600 border-blue-200':'hover:bg-gray-50'}">مستخدم</button>
-        <button onclick="changeRole(${u.id},'teacher')" class="px-2 py-1 text-xs border rounded-lg ${u.role==='teacher'?'bg-green-50 text-green-600 border-green-200':'hover:bg-gray-50'}">معلم</button>
-        <button onclick="changeRole(${u.id},'admin')" class="px-2 py-1 text-xs border rounded-lg hover:bg-gray-50">مدير</button>
-        <button onclick="delUser(${u.id})" class="px-2 py-1 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50">🗑️</button>
+function aTab(t){
+  ['u','p','b'].forEach(x=>{const e=$('at_'+x);if(e)e.className='flex-1 py-2 rounded-lg font-semibold text-xs '+(x===t?'bg-blue-600 text-white':'text-gray-600 hover:bg-gray-50');});
+  if(t==='u'){
+    const us=window._aU||[];
+    $('aCont').innerHTML=us.map(u=>`<div class="bg-white rounded-xl p-3 border shadow-sm mb-2">
+      <div class="flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg ${u.role==='admin'?'bg-red-500':u.role==='teacher'?'bg-green-500':'bg-blue-600'} text-white flex items-center justify-center font-bold text-xs">${u.name[0]}</div><div><div class="font-semibold text-sm">${u.name}</div><div class="text-xs text-gray-500">${u.email}</div></div></div>
+      <span class="px-2 py-0.5 rounded-full text-xs font-bold ${u.role==='admin'?'bg-red-50 text-red-600':u.role==='teacher'?'bg-green-50 text-green-600':'bg-blue-50 text-blue-600'}">${u.role==='admin'?L('admin'):u.role==='teacher'?L('teacher'):L('user')}</span></div>
+      ${u.role!=='admin'?`<div class="flex gap-1 justify-end mt-2">
+        <button onclick="chRole(${u.id},'user')" class="px-2 py-1 text-xs border rounded-lg ${u.role==='user'?'bg-blue-50 text-blue-600 border-blue-200':'hover:bg-gray-50'}">${L('user')}</button>
+        <button onclick="chRole(${u.id},'teacher')" class="px-2 py-1 text-xs border rounded-lg ${u.role==='teacher'?'bg-green-50 text-green-600 border-green-200':'hover:bg-gray-50'}">${L('teacher')}</button>
+        <button onclick="chRole(${u.id},'admin')" class="px-2 py-1 text-xs border rounded-lg hover:bg-gray-50">${L('admin')}</button>
+        <button onclick="delU(${u.id})" class="px-2 py-1 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50">🗑️</button>
       </div>`:''}</div>`).join('');
-  }else if(tab==='teachers'){
-    const ts=window._aTeachers||[];
-    $('aContent').innerHTML=`<div class="mb-3"><button onclick="addTeacherForm()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700">➕ إضافة معلم جديد</button></div>
-    <div id="addTeacherArea"></div>
-    ${ts.map(t=>`<div class="bg-white rounded-xl p-4 border shadow-sm mb-2 flex items-center justify-between">
-      <div class="flex items-center gap-3"><img src="${t.image}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='https://via.placeholder.com/80?text=👤'"><div><div class="font-semibold text-sm">${t.name}</div><div class="text-xs text-gray-500">${(t.subjects||[]).join('، ')}</div></div></div>
-      <div class="flex items-center gap-2"><span class="text-sm font-bold text-blue-600">${t.hourly_rate} ر.ع</span><span class="text-xs text-gray-500">⭐ ${t.rating}</span>
-      <button onclick="toggleTeacher(${t.id},${!t.is_active})" class="px-2 py-1 text-xs border rounded-lg ${t.is_active?'text-red-600 border-red-200 hover:bg-red-50':'text-green-600 border-green-200 hover:bg-green-50'}">${t.is_active?'تعطيل':'تفعيل'}</button>
-      <button onclick="delTeacher(${t.id})" class="px-2 py-1 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50">🗑️</button></div></div>`).join('')}`;
+  }else if(t==='p'){
+    const ps2=window._aT||[];
+    $('aCont').innerHTML=`<div class="mb-3"><button onclick="addTeacherForm()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-700">➕ ${L('addTeacher')}</button></div><div id="addPA"></div>
+    ${ps2.map(p=>`<div class="bg-white rounded-xl p-3 border shadow-sm mb-2 flex items-center justify-between">
+      <div class="flex items-center gap-2"><img src="${p.image}" class="w-9 h-9 rounded-lg object-cover" onerror="this.style.display='none'"><div><div class="font-semibold text-sm">${p.name_ar}</div><div class="text-xs text-gray-500">${(p.subjects||[]).slice(0,3).join('، ')}</div></div></div>
+      <div class="flex items-center gap-2"><span class="text-xs font-bold text-blue-600">${p.hourly_rate} ${L('omr')}</span><span class="text-xs text-gray-500">⭐ ${p.rating}</span>
+      <button onclick="togTeacher(${p.id},${!p.is_active})" class="px-2 py-1 text-xs border rounded-lg ${p.is_active?'text-red-600 border-red-200':'text-green-600 border-green-200'}">${p.is_active?L('disable'):L('enable')}</button>
+      <button onclick="delTeacher(${p.id})" class="px-2 py-1 text-xs text-red-600 border border-red-200 rounded-lg">🗑️</button></div></div>`).join('')}`;
   }else{
-    const bks=window._aBooks||[];
-    $('aContent').innerHTML=bks.length?bks.map(b=>`<div class="bg-white rounded-xl p-4 border shadow-sm mb-2 text-sm">
+    const bks=window._aB||[];
+    $('aCont').innerHTML=bks.length?bks.map(b=>`<div class="bg-white rounded-xl p-3 border shadow-sm mb-2 text-xs">
       <div class="flex items-center justify-between mb-1"><div><b>${b.teacher_name}</b> ← ${b.student_name}</div>
-      <span class="px-2 py-0.5 rounded-full text-xs font-bold ${b.status==='active'?'bg-green-50 text-green-600':b.status==='cancelled'?'bg-red-50 text-red-600':'bg-amber-50 text-amber-600'}">${b.status==='active'?'مؤكد':b.status==='cancelled'?'ملغي':'مكتمل'}</span></div>
-      <div class="flex items-center justify-between"><span class="text-xs text-gray-500">${b.subject} · ${b.booking_date} · ${b.booking_time} · ${b.price} ر.ع</span>
-      ${b.status==='active'?`<button onclick="cancelBookAdmin(${b.id})" class="text-xs text-red-600 border border-red-200 px-2 py-0.5 rounded-lg">إلغاء</button>`:''}</div></div>`).join(''):'<div class="text-center py-8 text-gray-400">لا توجد حجوزات</div>';
+      <span class="px-2 py-0.5 rounded-full font-bold ${b.status==='active'?'bg-green-50 text-green-600':b.status==='cancelled'?'bg-red-50 text-red-600':'bg-amber-50 text-amber-600'}">${b.status==='active'?L('active'):b.status==='cancelled'?L('cancelled'):L('completed')}</span></div>
+      <div class="flex items-center justify-between"><span class="text-gray-500">${b.subject} · ${b.booking_date} · ${b.booking_time} · ${b.price} ${L('omr')}</span>
+      ${b.status==='active'?`<button onclick="canBk(${b.id})" class="text-red-600 border border-red-200 px-2 py-0.5 rounded-lg">${L('cancel')}</button>`:''}</div></div>`).join('')
+    :`<div class="text-center py-8 text-gray-400">${L('noBook')}</div>`;
   }
 }
 
 function addTeacherForm(){
-  $('addTeacherArea').innerHTML=`<div class="bg-green-50 rounded-xl p-4 border-2 border-green-200 mb-4">
-    <h4 class="font-bold mb-3 text-sm">➕ إضافة معلم جديد</h4>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-      <input id="ntName" placeholder="اسم المعلم" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm">
-      <input id="ntEmail" placeholder="البريد الإلكتروني" dir="ltr" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm">
-      <input id="ntSpec" placeholder="التخصص" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm">
-      <input id="ntPrice" type="number" placeholder="سعر الساعة" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm">
-      <input id="ntImg" placeholder="رابط الصورة (اختياري)" dir="ltr" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm">
-      <input id="ntPw" placeholder="كلمة المرور" dir="ltr" value="123456" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm">
+  $('addPA').innerHTML=`<div class="bg-green-50 rounded-xl p-4 border-2 border-green-200 mb-3">
+    <h4 class="font-bold mb-2 text-xs">➕ ${L('addTeacher')}</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+      <input id="nN" placeholder="${L('name')}" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-xs">
+      <input id="nE" placeholder="${L('email')}" dir="ltr" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-xs">
+      <input id="nS" placeholder="${L('spec')}" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-xs">
+      <input id="nPr" type="number" placeholder="${L('priceH')}" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-xs">
+      <input id="nIm" placeholder="${L('imgUrl')}" dir="ltr" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-xs">
+      <select id="nCat" class="px-3 py-2 border-2 border-gray-200 rounded-lg text-xs">${cats.map(c=>`<option value="${c.id}">${cn(c)}</option>`).join('')}</select>
     </div>
-    <div class="flex gap-2"><button onclick="createTeacher()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">✅ إنشاء</button><button onclick="$('addTeacherArea').innerHTML=''" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm">إلغاء</button></div>
+    <div class="flex gap-2"><button onclick="createTeacher()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">✅ ${L('create')}</button><button onclick="$('addPA').innerHTML=''" class="bg-gray-200 px-4 py-2 rounded-lg text-xs">${L('cancel')}</button></div>
   </div>`;
 }
 async function createTeacher(){
-  const name=$('ntName').value,email=$('ntEmail').value,spec=$('ntSpec').value,price=+$('ntPrice').value,img=$('ntImg').value,pw=$('ntPw').value||'123456';
-  if(!name||!email)return toast('⚠️ أدخل الاسم والبريد');
-  const uRes=await supaPost('users',[{name,email,phone:'',password:pw,role:'teacher'}]);
-  if(!uRes||!uRes.length)return toast('❌ خطأ أو البريد موجود');
-  await supaPost('teachers',[{user_id:uRes[0].id,name,image:img||'https://via.placeholder.com/400?text=👤',specialization:spec,hourly_rate:price,subjects:[],languages:['العربية']}]);
-  toast('✅ تم إضافة المعلم');showAdmin();
+  const n=$('nN').value,e=$('nE').value,s=$('nS').value,pr=+$('nPr').value,im=$('nIm').value,ct=+$('nCat').value;
+  if(!n||!e)return toast(L('fillFields'));
+  const uR=await POST('users',[{name:n,email:e,phone:'',password:'123456',role:'teacher'}]);
+  if(!uR?.length)return toast(L('emailExists'));
+  await POST('teachers',[{user_id:uR[0].id,category_id:ct,governorate_id:selGov||1,name_ar:n,image:im||'',specialization_ar:s,hourly_rate:pr,subjects:[],languages:['العربية']}]);
+  toast(L('saved'));showAdmin();
 }
-async function changeRole(uid,role){
-  await supaPatch('users',{role},`?id=eq.${uid}`);
-  if(role==='teacher'){const u=(window._aUsers||[]).find(x=>x.id===uid);if(u){const exist=await supaGet('teachers',`?user_id=eq.${uid}`);if(!exist||!exist.length)await supaPost('teachers',[{user_id:uid,name:u.name,image:'https://via.placeholder.com/400?text=👤',subjects:[],languages:['العربية']}]);}}
-  toast('✅ تم التغيير');showAdmin();
+async function chRole(uid,role){
+  await PATCH('users',{role},`?id=eq.${uid}`);
+  if(role==='teacher'){const u=(window._aU||[]).find(x=>x.id===uid);if(u){const ex=await GET('teachers',`?user_id=eq.${uid}`);if(!ex?.length)await POST('teachers',[{user_id:uid,name_ar:u.name,image:'',subjects:[],languages:['العربية'],governorate_id:selGov||1,category_id:cats[0]?.id||1}]);}}
+  toast(L('roleChanged'));showAdmin();
 }
-async function delUser(uid){if(!confirm('حذف هذا المستخدم؟'))return;await supaDel('users',`?id=eq.${uid}`);toast('تم الحذف');showAdmin();}
-async function toggleTeacher(tid,active){await supaPatch('teachers',{is_active:active},`?id=eq.${tid}`);toast(active?'✅ تم التفعيل':'⛔ تم التعطيل');showAdmin();}
-async function delTeacher(tid){if(!confirm('حذف هذا المعلم؟'))return;await supaDel('teachers',`?id=eq.${tid}`);toast('تم الحذف');showAdmin();}
-async function cancelBookAdmin(bid){await supaPatch('bookings',{status:'cancelled'},`?id=eq.${bid}`);toast('تم الإلغاء');showAdmin();}
+async function delU(id){if(!confirm(L('confirmDel')))return;await DEL('users',`?id=eq.${id}`);toast(L('deleted'));showAdmin();}
+async function togTeacher(id,act){await PATCH('teachers',{is_active:act},`?id=eq.${id}`);toast(act?L('enable'):L('disable'));showAdmin();}
+async function delTeacher(id){if(!confirm(L('confirmDel')))return;await DEL('teachers',`?id=eq.${id}`);toast(L('deleted'));showAdmin();}
+async function canBk(id){await PATCH('bookings',{status:'cancelled'},`?id=eq.${id}`);toast(L('bookCancelled'));showAdmin();}
 
-// ==================== INIT ====================
-goHome();updateUI();
+// ===== HERO SLIDER =====
+let sliderIdx=0,sliderTimer=null;
+function initSlider(){
+  const slides=document.querySelectorAll('.hero-slide:not(.hero-overlay)');if(!slides.length)return;
+  const dots=$('heroDots');if(dots)dots.innerHTML=Array.from({length:slides.length}).map((_,i)=>`<div class="hero-dot ${i===0?'active':''}" onclick="goSlide(${i})"></div>`).join('');
+  slides.forEach((s,i)=>{const v=s.querySelector('video');if(v&&i===0)v.play();});
+  sliderTimer=setInterval(()=>slideHero(1),5000);
+}
+function slideHero(dir){
+  const slides=document.querySelectorAll('.hero-slide:not(.hero-overlay)');if(!slides.length)return;
+  slides[sliderIdx].classList.remove('active');const v1=slides[sliderIdx].querySelector('video');if(v1)v1.pause();
+  sliderIdx=(sliderIdx+dir+slides.length)%slides.length;
+  slides[sliderIdx].classList.add('active');const v2=slides[sliderIdx].querySelector('video');if(v2){v2.currentTime=0;v2.play();}
+  document.querySelectorAll('.hero-dot').forEach((d,i)=>d.classList.toggle('active',i===sliderIdx));
+  clearInterval(sliderTimer);sliderTimer=setInterval(()=>slideHero(1),5000);
+}
+function goSlide(i){
+  const slides=document.querySelectorAll('.hero-slide:not(.hero-overlay)');if(!slides.length)return;
+  slides[sliderIdx].classList.remove('active');const v1=slides[sliderIdx].querySelector('video');if(v1)v1.pause();
+  sliderIdx=i;slides[sliderIdx].classList.add('active');const v2=slides[sliderIdx].querySelector('video');if(v2){v2.currentTime=0;v2.play();}
+  document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+  clearInterval(sliderTimer);sliderTimer=setInterval(()=>slideHero(1),5000);
+}
+
+// ===== INIT =====
+(async()=>{
+  applyLang();
+  await loadGovs();
+  const sv=localStorage.getItem('gov');
+  if(sv!==null){selGov=+sv;selWil=+(localStorage.getItem('wil')||0);const g=govs.find(x=>x.id===selGov);const w=wils.find(x=>x.id===selWil);$('locLbl').textContent=w?wn(w):g?gn(g):L('all');$('locBtn').classList.remove('hidden');goHome();}
+  else{openLocMod();}
+  updateUI();
+})();
 </script>
 </body>
 </html>
